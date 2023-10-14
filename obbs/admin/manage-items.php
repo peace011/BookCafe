@@ -64,7 +64,7 @@ if (strlen($_SESSION['odmsaid']) == 0) {
                                             <td class="text-center"><?php echo htmlentities($cnt); ?></td>
                                             <td class="font-w600"><?php echo htmlentities($row->ItemName); ?></td>
                                             <td class="font-w600"><?php echo htmlentities($row->ID); ?></td>
-                                            <td class="d-none d-sm-table-cell">$<?php echo htmlentities($row->ItemPrice); ?></td>
+                                            <td class="d-none d-sm-table-cell">Rs.<?php echo htmlentities($row->ItemPrice); ?></td>
                                             <!-- <td class="d-none d-sm-table-cell">
                                             <?php  $book_aval=$row->BookAval;
     

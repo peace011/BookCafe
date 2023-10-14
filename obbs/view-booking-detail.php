@@ -128,15 +128,72 @@ foreach($results as $row)
     
     <th>Book Name</th>
     <td><?php  echo $row->ServiceName;?></td>
-    <th>Book Description</th>
-    <td><?php  echo $row->SerDes;?></td>
+	<th>Book Price</th>
+    <td>$<?php  echo $row->ServicePrice;?></td>
   </tr>
    <tr>
-    <th>Book Price</th>
-    <td>$<?php  echo $row->ServicePrice;?></td>
+    <th>Table Price</th>
+    <td>$100</td>
     <th>Apply Date</th>
     <td><?php  echo $row->BookingDate;?></td>
   </tr>
+
+  <tr>
+  <th> Item Name</th>
+<td>
+	
+<?php
+$eid = $_GET['editid'];
+
+// Fetch and display ItemIDs separately
+$sqlSelectItemIDs = "SELECT ItemID, Quantity FROM tblorder WHERE BID = :eid";
+
+$querySelectItemIDs = $dbh->prepare($sqlSelectItemIDs);
+$querySelectItemIDs->bindParam(':eid', $eid, PDO::PARAM_STR);
+$querySelectItemIDs->execute();
+$resultItemIDs = $querySelectItemIDs->fetchAll(PDO::FETCH_ASSOC);
+
+echo '<ul>'; // Start an unordered list to display items and quantities
+
+// Iterate through the ItemIDs and fetch and display their names, quantities, and prices
+foreach ($resultItemIDs as $itemData) {
+    $itemID = $itemData['ItemID'];
+    $quantity = $itemData['Quantity'];
+
+    // Fetch the ItemName and ItemPrice for each ItemID
+    $sqlSelectItemData = "SELECT ItemName, ItemPrice FROM tblitem WHERE ID = :itemID";
+    $querySelectItemData = $dbh->prepare($sqlSelectItemData);
+    $querySelectItemData->bindParam(':itemID', $itemID, PDO::PARAM_INT);
+    $querySelectItemData->execute();
+    $itemResult = $querySelectItemData->fetch(PDO::FETCH_OBJ);
+
+    // Display the ItemName, Quantity, and ItemPrice
+    if ($querySelectItemData->rowCount() > 0) {
+        echo '<li>';
+        echo  htmlentities($itemResult->ItemName) . '<br>';
+        echo 'Quantity: ' . htmlentities($quantity) . '<br>';
+        echo 'Per Price: Rs.' . htmlentities($itemResult->ItemPrice);
+        echo '</li>';
+        echo '<br>';
+        $totalPrice += ($itemResult->ItemPrice * $quantity); // Update the total price
+    }
+}
+
+echo '</ul>'; // End the unordered list
+?>
+</td>
+
+  <th>Total Price</th>
+ <?php
+ // Calculate the Total Price (Item Price + Service Price)
+//  $totalPrice = $row->ItemPrice + $row->ServicePrice +100;
+$totalPrice += $row->ServicePrice; // Add the book price
+$totalPrice += 100; // Add the table price (assuming it's a fixed value of $100)
+
+ ?>
+ <td colspan="3">Rs.<?php echo $totalPrice; ?></td>
+  </tr>
+
 
   <tr>
     

@@ -181,8 +181,7 @@ foreach($results as $row)
     <td><?php  echo $row->ServiceName;?></td>
     <th>Book Price</th>
     <td>$<?php  echo $row->ServicePrice;?></td>
-    <!-- <th>Book Description</th>
-    <td><?php  echo $row->SerDes;?></td> -->
+  
   </tr>
 
    <tr>
@@ -197,20 +196,71 @@ foreach($results as $row)
 <tr>
   <th> Item Name</th>
 <td>
-    <?php
+  <!-- Single itemname -->
+    <!-- <?php
     // ItemID is directly accessible from the $row object
-    $itemid = $row->ItemID;
-    $categorySql = "SELECT ItemName FROM tblitem WHERE ID = '$itemid'";
-    $categoryQuery = $dbh->prepare($categorySql);
-    $categoryQuery->execute();
-    $categoryResult = $categoryQuery->fetch(PDO::FETCH_OBJ);
-    if ($categoryQuery->rowCount() > 0) {
-        echo $categoryResult->ItemName;
+    // $itemid = $row->ItemID;
+    // $categorySql = "SELECT ItemName FROM tblitem WHERE ID = '$itemid'";
+    // $categoryQuery = $dbh->prepare($categorySql);
+    // $categoryQuery->execute();
+    // $categoryResult = $categoryQuery->fetch(PDO::FETCH_OBJ);
+    // if ($categoryQuery->rowCount() > 0) {
+    //     echo $categoryResult->ItemName;
+    // }
+    ?> -->
+
+    <!-- Array itemname -->
+    <?php
+$eid = $_GET['editid'];
+
+// Fetch and display ItemIDs separately
+$sqlSelectItemIDs = "SELECT ItemID, Quantity FROM tblorder WHERE BID = :eid";
+
+$querySelectItemIDs = $dbh->prepare($sqlSelectItemIDs);
+$querySelectItemIDs->bindParam(':eid', $eid, PDO::PARAM_STR);
+$querySelectItemIDs->execute();
+$resultItemIDs = $querySelectItemIDs->fetchAll(PDO::FETCH_ASSOC);
+
+echo '<ul>'; // Start an unordered list to display items and quantities
+
+// Iterate through the ItemIDs and fetch and display their names, quantities, and prices
+foreach ($resultItemIDs as $itemData) {
+    $itemID = $itemData['ItemID'];
+    $quantity = $itemData['Quantity'];
+
+    // Fetch the ItemName and ItemPrice for each ItemID
+    $sqlSelectItemData = "SELECT ItemName, ItemPrice FROM tblitem WHERE ID = :itemID";
+    $querySelectItemData = $dbh->prepare($sqlSelectItemData);
+    $querySelectItemData->bindParam(':itemID', $itemID, PDO::PARAM_INT);
+    $querySelectItemData->execute();
+    $itemResult = $querySelectItemData->fetch(PDO::FETCH_OBJ);
+
+    // Display the ItemName, Quantity, and ItemPrice
+    if ($querySelectItemData->rowCount() > 0) {
+        echo '<li>';
+        echo  htmlentities($itemResult->ItemName) . '<br>';
+        echo 'Quantity: ' . htmlentities($quantity) . '<br>';
+        echo 'Per Price: Rs.' . htmlentities($itemResult->ItemPrice);
+        echo '</li>';
+        echo '<br>';
+        $totalPrice += ($itemResult->ItemPrice * $quantity); // Update the total price
     }
-    ?>
+}
+
+echo '</ul>'; // End the unordered list
+?>
+
 </td>
-  <th>Item Price</th>
-    <td>$<?php echo $row->ItemPrice;?></td>
+
+  <th>Total Price</th>
+ <?php
+ // Calculate the Total Price (Item Price + Service Price)
+//  $totalPrice = $row->ItemPrice + $row->ServicePrice +100;
+ $totalPrice += $row->ServicePrice; // Add the book price
+        $totalPrice += 100; // Add the table price (assuming it's a fixed value of $100)
+    
+ ?>
+ <td colspan="3">Rs.<?php echo $totalPrice; ?></td>
   </tr>
 
 
@@ -250,22 +300,33 @@ if($row->Status=="")
 
 
 
-<tr>
- <th>Total Price</th>
- <?php
- // Calculate the Total Price (Item Price + Service Price)
- $totalPrice = $row->ItemPrice + $row->ServicePrice +100;
- ?>
- <td colspan="3">$<?php echo $totalPrice; ?></td>
-  </tr>
 
-  
- 
-              
- 
+
+
+
+
+
 <?php $cnt=$cnt+1;}} ?>
 
 </table> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <?php 
 
 if ($status==""){

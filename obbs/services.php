@@ -369,13 +369,14 @@ foreach ($books as $book) {
 
                                     <!-- dis -->
                                     <?php } ?>
-                                    <?php } ?>
+                                    <?php  ?>
                                     
                                     <!-- dis -->
 
 
 
-								</tr> <?php $cnt=$cnt+1;?> 
+								</tr>
+                                 <?php $cnt=$cnt+1;}?> 
 
 
 

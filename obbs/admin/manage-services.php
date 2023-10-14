@@ -88,7 +88,7 @@ foreach($results as $row)
                                         <!-- <td class="font-w600"><?php  echo htmlentities($row->SerDes);?></td> -->
 
 
-                                        <td class="d-none d-sm-table-cell">$<?php  echo htmlentities($row->ServicePrice);?></td>
+                                        <td class="d-none d-sm-table-cell">Rs.<?php  echo htmlentities($row->ServicePrice);?></td>
                                         <td class="d-none d-sm-table-cell"><?php  echo htmlentities($row->SerAvailable);?></td>
 
                                         <td class="d-none d-sm-table-cell">
