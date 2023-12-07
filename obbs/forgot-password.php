@@ -103,8 +103,10 @@ return true;
                     <div class="agileinfo-contact-form-grid">
                         <form action="#" method="post" name="chngpwd" onSubmit="return valid();">
                             <input type="email" class="form-control" name="email" placeholder="E-mail" required="true">
-                            <input type="text" class="form-control" required="true" name="mobile" maxlength="10" pattern="[0-9]+" placeholder="Mobile Number">
-                            <input type="password"class="form-control"  name="newpassword" placeholder="New Password" required="true"/>
+                            <input type="text" class="form-control" required="true" name="mobile" maxlength="10" pattern="9[0-9]{9}" placeholder="Mobile Number" >
+                            <input type="password"class="form-control"  name="newpassword" placeholder="New Password" required="true" pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$" title="Password must have at least one capital letter, one number, and one unique symbol"/>
+
+
                             <br>
                             <input type="password" name="confirmpassword" placeholder="Confirm Password" class="form-control" required="true" />
                             <br>

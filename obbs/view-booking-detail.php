@@ -46,6 +46,10 @@ if (strlen($_SESSION['obbsuid']==0)) {
 <!--[if lt IE 9]>
   <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
 <![endif]-->
+
+
+<script src="https://js.stripe.com/v3/"></script>
+
 </head>
 <body>
 	<!-- banner -->
@@ -67,13 +71,7 @@ if (strlen($_SESSION['obbsuid']==0)) {
 				<p class="wow fadeInUp animated" data-wow-delay=".5s">View Your Booking Details.</p>
 					<div class="bs-docs-example wow fadeInUp animated" data-wow-delay=".5s">
 						 <?php
-//                   $uid=$_SESSION['obbsuid'];
-
-// $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.EventType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.UpdationDate,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice,Remark from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID  where tblbooking.UserID=:uid";
-// $query = $dbh -> prepare($sql);
-// $query-> bindParam(':uid', $uid, PDO::PARAM_STR);
-// $query->execute();
-// $results=$query->fetchAll(PDO::FETCH_OBJ);
+          
 
 $eid=$_GET['editid'];
 
@@ -235,6 +233,34 @@ if($row->Status=="")
 					</div>
 				<div class="clearfix"> </div>
 
+
+
+       <!-- Your payment form -->
+       <form action="charge.php" method="post" id="payment-form">
+  <!-- Other form fields -->
+  <label for="amount">Amount (in cents):</label>
+<input type="text" id="amount" name="amount" required>
+
+  <!-- Stripe.js token element -->
+  <div id="card-element"></div>
+
+  <!-- Used to display form errors -->
+  <div id="card-errors" role="alert"></div>
+
+  <!-- Hidden input for the Stripe token -->
+  <input type="hidden" name="stripeToken" id="stripeToken">
+  <input type="hidden" name="stripeAmount" id="stripeAmount">
+
+  <!-- Submit button -->
+  <button type="submit">Submit Payment</button>
+</form>
+
+
+
+
+
+
+
 				<!-- Print Button -->
 				<button onclick="printReceipt()">Print Receipt</button>
 
@@ -280,5 +306,49 @@ if($row->Status=="")
 <!-- //here ends scrolling icon -->
 <script src="js/modernizr.custom.js"></script>
 
+
+
+<script>
+// Set your Stripe public key
+var stripe = Stripe('pk_test_51OI6ZrGnOza8XShbfZAVqHOLKYNTc2U46uZBP1wNTDtsGsJGMI5b4AUTgt3ffSpZRpBnxVuKC1SyepjQzLo5Z6AD00c2HfAgoz');
+
+// Create an instance of Elements
+var elements = stripe.elements();
+
+// Create an instance of the card Element
+var card = elements.create('card');
+
+// Add an instance of the card Element into the `card-element` div
+card.mount('#card-element');
+
+// Handle form submission
+var form = document.getElementById('payment-form');
+var amountField = document.getElementById('amount');
+
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  // Fetch the amount from the form
+  var amountValue = amountField.value;
+
+  // Create a token using the card element
+  stripe.createToken(card, { amount: amountValue }).then(function (result) {
+    if (result.error) {
+      // Inform the user if there was an error
+      var errorElement = document.getElementById('card-errors');
+      errorElement.textContent = result.error.message;
+    } else {
+      // Log the token to the console (for debugging)
+      console.log('Token:', result.token.id);
+
+      // Set the token in the hidden input field
+      document.getElementById('stripeToken').value = result.token.id;
+      document.getElementById('stripeAmount').value = amountValue;
+      // Submit the form
+      form.submit();
+    }
+  });
+});
+</script>
 </body>	
 </html><?php }  ?>

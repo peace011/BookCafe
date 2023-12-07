@@ -76,7 +76,7 @@ echo "<script>window.location.href ='mail.php'</script>";
 				<div class="col-md-6 contact-form-left">
 					<div class="w3layouts-contact-form-top">
 						<h3>Get in touch</h3>
-						<p>Pellentesque eget mi nec est tincidunt accumsan. Proin fermentum dignissim justo, vel euismod justo sodales vel. In non condimentum mauris. Maecenas condimentum interdum lacus, ac varius nisl dignissim ac. Vestibulum euismod est risus, quis convallis nisi tincidunt eget. Sed ultricies congue lacus at fringilla.</p>
+						<p>Youn can always be connected with us.</p>
 					</div>
 					<div class="agileits-contact-address">
 						<ul>

@@ -116,8 +116,10 @@ return true;
 						<form method="post" name="signup" onsubmit="return checkpass();">
                                                 <input type="text" name="fname" placeholder="Full Name" required="true">
                                                 <input type="email" name="email" placeholder="E-mail" required="true">
-                                                <input type="text" name="mobno" placeholder="Mobile Number" required="true" maxlength="10" pattern="[0-9]+">
-                                                <input type="password"  name="password" placeholder="Password" required="true" id="password1">
+                                                <input type="text" name="mobno" placeholder="Mobile Number" required="true" maxlength="10" pattern="9[0-9]{9}">
+                                                <!-- <input type="password"  name="password" placeholder="Password" required="true" id="password1"> -->
+												<input type="password" name="password" placeholder="Password" required="true" id="password1" pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$" title="Password must have at least one capital letter, one number, and one unique symbol">
+
                                                 <br>
                                                 <input type="password"  name="confirmpassword" placeholder="Confirm Password" required="true" id="password2">
                                               <br>

@@ -90,6 +90,43 @@ foreach ($books as $book) {
 
 
 
+// / Retrieve the categories from the tblcategory table
+$sql = "SELECT * FROM tblcategory";
+$query = $dbh->prepare($sql);
+$query->execute();
+$categories = $query->fetchAll(PDO::FETCH_OBJ);
+
+// Retrieve Previously Booked Categories
+$_SESSION['booked_categories'] = getBookedCategories($_SESSION['obbsuid']);
+
+// Get Previously Booked Categories
+function getBookedCategories($userId) {
+    global $dbh;
+
+    $sql = "SELECT DISTINCT s.CategoryID
+            FROM tblbooking b
+            JOIN tblservice s ON b.ServiceID = s.ID
+            WHERE b.UserID = :userId";
+    $query = $dbh->prepare($sql);
+    $query->bindParam(':userId', $userId, PDO::PARAM_INT);
+    $query->execute();
+    return $query->fetchAll(PDO::FETCH_COLUMN);
+}
+
+// Modify the SQL query based on the selected category or search term
+// ...
+
+// Display Recommended Books Based on Categories
+$previouslyBookedCategories = $_SESSION['booked_categories'];
+$recommendedBooks = [];
+foreach ($previouslyBookedCategories as $category) {
+    $sql = "SELECT * FROM tblservice WHERE CategoryID = :category AND ID NOT IN (SELECT ServiceID FROM tblbooking WHERE UserID = :userId) ORDER BY ServiceName ASC LIMIT 5";
+    $query = $dbh->prepare($sql);
+    $query->bindParam(':category', $category, PDO::PARAM_INT);
+    $query->bindParam(':userId', $_SESSION['obbsuid'], PDO::PARAM_INT);
+    $query->execute();
+    $recommendedBooks[$category] = $query->fetchAll(PDO::FETCH_OBJ);
+}
 
 
 ?>
@@ -122,74 +159,7 @@ foreach ($books as $book) {
 		});
 	});
 </script> 
-<!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-<![endif]-->
 
-
-
-<!-- For searching algorith Tria -->
-<!-- <script type="text/javascript">
-    $(document).ready(function () {
-        const trie = <?php echo json_encode($trie->root); ?>; // Convert PHP Trie object to JavaScript object
-
-        // Function to perform auto-complete and display suggestions
-        function autoComplete(searchTerm) {
-            const suggestions = [];
-            let node = trie;
-
-            for (let char of searchTerm) {
-                if (!node.children[char]) {
-                    return suggestions; // Prefix not found, return empty array
-                }
-                node = node.children[char];
-            }
-
-            // Traverse the Trie to find all words with the given prefix
-            findWordsWithPrefix(node, searchTerm, suggestions);
-            return suggestions;
-        }
-
-        function findWordsWithPrefix(node, prefix, suggestions) {
-            if (node.isEndOfWord) {
-                suggestions.push(prefix);
-            }
-
-            for (let char in node.children) {
-                findWordsWithPrefix(node.children[char], prefix + char, suggestions);
-            }
-        }
-
-        // Event listener for the search input field
-        $('#searchInput').on('input', function () {
-            const searchTerm = $(this).val().trim().toLowerCase(); // Trim whitespace from the search term
-            const suggestions = autoComplete(searchTerm);
-
-            // Display suggestions in the auto-complete container
-            const autoCompleteContainer = $('#autoCompleteSuggestions');
-            autoCompleteContainer.empty();
-
-            for (let suggestion of suggestions) {
-                autoCompleteContainer.append('<p>' + suggestion + '</p>');
-            }
-
-            // Filter and display books based on the search term
-            if (searchTerm === '') {
-                $('#bookList tbody tr').show(); // Show all books when search term is empty
-            } else {
-                $('#bookList tbody tr').each(function () {
-                    const bookName = $(this).find('td:nth-child(2)').text().toLowerCase();
-                    // Check if the book name starts with the search term
-                    if (bookName.startsWith(searchTerm)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }
-        });
-    });
-</script> -->
 
 <!-- Add the following JavaScript after including jQuery -->
 <script type="text/javascript">
@@ -351,6 +321,7 @@ foreach ($books as $book) {
 									<td><?php  echo htmlentities($row->SerDes);?></td>
 									<td><?php  echo htmlentities($row->SerAvailable);?></td>
 									<td><?php  echo htmlentities($row->ServicePrice);?></td>
+                                    
 
                                     <!-- //disabled -->
                                     <?php if ($row->SerAvailable == 0) { ?>
@@ -389,11 +360,88 @@ foreach ($books as $book) {
 
 					</div>
 
-		
+
 
 				<div class="clearfix"> </div>
+                
 			</div>
 		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+      <!-- Add this section where you want to display recommended books -->
+      <div>
+      <div class="about-top">
+		<div class="container">
+	
+
+			<div class="wthree-services-bottom-grids">
+				
+					<div class="bs-docs-example wow fadeInUp animated" data-wow-delay=".5s">
+
+    <h3>Recommended Books </h3>
+
+<table class="table table-bordered" id="bookList">
+    <thead>
+        <tr>
+            <th>S.N</th>
+            <th>Books Name</th>
+            <th>Description</th>
+            <th>Available</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        $cnt = 1;
+         // Sort recommended books based on the order of booking
+             $sortedCategories = array_keys($recommendedBooks);
+             rsort($sortedCategories);
+
+        // Display recommended books
+        foreach ($sortedCategories as $category) {
+            foreach ($recommendedBooks[$category] as $book) {
+                ?>
+                <tr>
+                    <td><?php echo htmlentities($cnt); ?></td>
+                    <td><?php echo htmlentities($book->ServiceName); ?></td>
+                    <td><?php echo htmlentities($book->SerDes); ?></td>
+			        <td><?php  echo htmlentities($book->SerAvailable);?></td>
+                    <td><?php echo htmlentities($book->ServicePrice); ?></td>
+                    <td><a href="book-services.php?bookid=<?php echo $book->ID; ?>" class="btn btn-default">Book Services</a></td>
+                </tr>
+                <?php
+                $cnt++;
+            }
+        }
+        ?>
+    </tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
 	</div>
 	<!-- //about-top -->
 	
