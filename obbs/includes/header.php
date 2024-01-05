@@ -17,7 +17,7 @@
                                 </div>
 
                                 <!-- Collect the nav links, forms, and other content for toggling -->
-                                <div class="collapse navbar-collapse nav-wil" id="bs-example-navbar-collapse-1">
+                                <div class="collapse navbar-collapse nav-wil" id="bs-example-navbar-collapse-1" style="margin-left:20px">
                                     <nav>
                                         <ul class="nav navbar-nav">
                                             <li class="active"><a href="index.php">Home</a></li>
@@ -64,7 +64,7 @@
                             <ul style="color: white;">
                                 <li style="color: white;"><a href="login.php">Login</a></li>
                                             <!-- <li style="color: white;"> <a href="signup.php">Register</a></li> -->
-                                            <li><a href="admin/login.php">Admin</a></li>
+                                            <!-- <li><a href="admin/login.php">Admin</a></li> -->
                                <?php } ?> -->
 
                             </ul>

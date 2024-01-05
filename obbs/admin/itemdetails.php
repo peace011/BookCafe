@@ -84,7 +84,7 @@ if (strlen($_SESSION['odmsaid']==0)) {
                     <th>Item Description</th>
                      <td><?php  echo $row->ItemDes;?></td>
                       <th>Item Price</th>
-                     <td><?php  echo $row->ItemPrice;?></td>
+                     <td>$<?php  echo $row->ItemPrice;?></td>
                    </tr>
                  
                   

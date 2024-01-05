@@ -2,47 +2,58 @@
 session_start();
 error_reporting(0);
 include('includes/dbconnection.php');
-if (strlen($_SESSION['odmsaid']==0)) {
-  header('location:logout.php');
-  } else{
-    if(isset($_POST['submit']))
-  {
 
+if (strlen($_SESSION['odmsaid']) == 0) {
+    header('location:logout.php');
+} else {
+    if (isset($_POST['submit'])) {
+        // Check if the "serimage" key exists in the $_FILES array
+        if (isset($_FILES["serimage"])) {
+            $sername = $_POST['sername'];
+            $serauthor = $_POST['serauthor'];
+            $serdes = $_POST['serdes'];
+            $serprice = $_POST['serprice'];
+            $seravailable = $_POST['seravailable'];
+            $category = $_POST['category'];
 
-$sername=$_POST['sername'];
-$serauthor=$_POST['serauthor'];
-$serdes=$_POST['serdes'];
-$serprice=$_POST['serprice'];
-$seravailable=$_POST['seravailable'];
-$eventtype=$_POST['eventtype'];
+            $targetDirectory = "uploads/";
+            $targetFile = $targetDirectory . basename($_FILES["serimage"]["name"]);
 
+            // Check if the file is an actual image
+            $check = getimagesize($_FILES["serimage"]["tmp_name"]);
+            if ($check !== false) {
+                // File is an image
+                // Move the uploaded file to the desired directory
+                if (move_uploaded_file($_FILES["serimage"]["tmp_name"], $targetFile)) {
+                    $sql = "INSERT INTO tblservice(ServiceName,ServiceAuthor,SerDes,ServicePrice,SerAvailable,CategoryID,ServiceImage)VALUES(:sername,:serauthor,:serdes,:serprice,:seravailable,:category,:imagepath)";
+                    $query = $dbh->prepare($sql);
+                    $query->bindParam(':sername', $sername, PDO::PARAM_STR);
+                    $query->bindParam(':serauthor', $serauthor, PDO::PARAM_STR);
+                    $query->bindParam(':serdes', $serdes, PDO::PARAM_STR);
+                    $query->bindParam(':serprice', $serprice, PDO::PARAM_STR);
+                    $query->bindParam(':seravailable', $seravailable, PDO::PARAM_STR);
+                    $query->bindParam(':category', $category, PDO::PARAM_STR);
+                    $query->bindParam(':imagepath', $targetFile, PDO::PARAM_STR);
 
+                    $query->execute();
 
-$sql="insert into tblservice(ServiceName,ServiceAuthor,SerDes,ServicePrice,SerAvailable,CategoryID)values(:sername,:serauthor,:serdes,:serprice,:seravailable,:eventtype)";
-$query=$dbh->prepare($sql);
-$query->bindParam(':sername',$sername,PDO::PARAM_STR);
-$query->bindParam(':serauthor',$serauthor,PDO::PARAM_STR);
-$query->bindParam(':serdes',$serdes,PDO::PARAM_STR);
-$query->bindParam(':serprice',$serprice,PDO::PARAM_STR);
-$query->bindParam(':seravailable',$seravailable,PDO::PARAM_STR);
-$query->bindParam(':eventtype',$eventtype,PDO::PARAM_STR);
-
-
-
- $query->execute();
-
-   $LastInsertId=$dbh->lastInsertId();
-   if ($LastInsertId>0) {
-    echo '<script>alert("Books | Services has been added.")</script>';
-echo "<script>window.location.href ='add-services.php'</script>";
-  }
-  else
-    {
-         echo '<script>alert("Something Went Wrong. Please try again")</script>';
+                    $LastInsertId = $dbh->lastInsertId();
+                    if ($LastInsertId > 0) {
+                        echo '<script>alert("Books | Services has been added.")</script>';
+                        echo "<script>window.location.href ='add-services.php'</script>";
+                    } else {
+                        echo '<script>alert("Something Went Wrong. Please try again")</script>';
+                    }
+                } else {
+                    echo '<script>alert("Sorry, there was an error uploading your file.")</script>';
+                }
+            } else {
+                echo '<script>alert("File is not an image.")</script>';
+            }
+        } else {
+            echo '<script>alert("Please select a file to upload.")</script>';
+        }
     }
-
-  
-}
 
 ?>
 <!doctype html>
@@ -82,20 +93,10 @@ echo "<script>window.location.href ='add-services.php'</script>";
                                 </div>
                                 <div class="block-content">
                                    
-                                    <form method="post">
+                                    <form method="post" enctype="multipart/form-data">
 
                                     <div class="form-group row">
-                                            <!-- <label class="col-12" for="register1-email">Service Type:</label> -->
-                                            <!-- <div class="col-12">
-                                            <select name="bookname" class="form-control" required='true' >
-                                                
-                                                        <option value="books">Books</option>
-                                                      
-                                                    </select> 
-                                                   
-
-                                            </div> -->
-                                        <!-- </div> -->
+                                          
                                         
                                         <div class="form-group row">
                                                  <label class="col-12" for="register1-email">Book Name:</label>
@@ -106,6 +107,16 @@ echo "<script>window.location.href ='add-services.php'</script>";
                                             </div>
                                         </div>
 
+                                        <!-- Add this inside your form -->
+                                             <div class="form-group row">
+                                            <label class="col-12" for="register1-password">Book Image:</label>
+                                            <div class="col-12">
+                                                <input type="file" class="form-control" name="serimage">
+                                            </div>
+                                        </div>
+
+
+                                        <!-- <div class="form-group row"> -->
                                         <label class="col-12" for="register1-email">Book Author:</label>
                                             <div class="col-12">
                                                 <input type="text" class="form-control" name="serauthor" value="" required='true'> 
@@ -124,7 +135,7 @@ echo "<script>window.location.href ='add-services.php'</script>";
                                         <div class="form-group row">
                                             <label class="col-12" for="register1-email">Book Category:</label>
                                             <div class="col-12">
-                                       <select type="text" class="form-control" name="eventtype" required="true" >
+                                       <select type="text" class="form-control" name="category" required="true" >
 							 	<option value="">Choose Book category</option>
 							 	<?php 
 

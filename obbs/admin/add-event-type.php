@@ -10,14 +10,16 @@ if (strlen($_SESSION['odmsaid']==0)) {
 
 
 $etype=$_POST['eventtype'];
-$estatus=$_POST['estatus'];
+// $estatus=$_POST['estatus'];
 
-$serprice=$_POST['serprice'];
+$ecapacity=$_POST['ecapacity'];
 
-$sql="insert into tbleventtype(EventType,EventStatus)values(:etype, :estatus)";
+$sql="insert into tbltable(TableType,TableCapacity)values(:etype, :ecapacity)";
 $query=$dbh->prepare($sql);
 $query->bindParam(':etype',$etype,PDO::PARAM_STR);
-$query->bindParam(':estatus',$estatus,PDO::PARAM_STR);
+// $query->bindParam(':estatus',$estatus,PDO::PARAM_STR);
+$query->bindParam(':ecapacity',$ecapacity,PDO::PARAM_STR);
+
 
 
 
@@ -58,7 +60,7 @@ echo "<script>window.location.href ='add-event-type.php'</script>";
                 <div class="content">
                 
                     <!-- Register Forms -->
-                    <h2 class="content-heading">Add c</h2>
+                    <h2 class="content-heading">Add Tables</h2>
                     <div class="row">
                         <div class="col-md-12">
                             <!-- Bootstrap Register -->
@@ -82,8 +84,14 @@ echo "<script>window.location.href ='add-event-type.php'</script>";
                                                  <input type="text" class="form-control" name="eventtype" value="" required='true'>
                                             </div>
                                         </div>
-
                                         <div class="form-group row">
+                                            <label class="col-12" for="register1-email">Table Capacity:</label>
+                                            <div class="col-12">
+                                                 <input type="text" class="form-control" name="ecapacity" value="" required='true'>
+                                            </div>
+                                        </div>
+
+                                        <!-- <div class="form-group row">
                                             <label class="col-12" for="register1-email">Table Status:</label>
                                             <div class="col-12">
                                             <select name="estatus" id="book_aval" class="form-control" required>
@@ -92,7 +100,7 @@ echo "<script>window.location.href ='add-event-type.php'</script>";
 			</select>
 
                                             </div>
-                                        </div>
+                                        </div> -->
 
                                
 
@@ -135,3 +143,5 @@ echo "<script>window.location.href ='add-event-type.php'</script>";
     </body>
 </html>
 <?php }  ?>
+
+

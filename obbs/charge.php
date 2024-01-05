@@ -1,49 +1,64 @@
 <?php
-require_once('vendor/autoload.php'); // Include Stripe PHP library
+require_once('vendor/autoload.php');
+include('includes/dbconnection.php');
 
-\Stripe\Stripe::setApiKey('sk_test_51OI6ZrGnOza8XShbn65fS9IqEKoy0RDqN3Rcy1ToHfFggHIQmmvRuQypXbaA1E0D5SYZgXR3cnBQ1buEq21wrhyZ00tShFgZgJ'); // Replace with your actual secret key
+\Stripe\Stripe::setApiKey('sk_test_51OI6ZrGnOza8XShbn65fS9IqEKoy0RDqN3Rcy1ToHfFggHIQmmvRuQypXbaA1E0D5SYZgXR3cnBQ1buEq21wrhyZ00tShFgZgJ');
 
 if (isset($_POST['stripeToken'])) {
-    $token = $_POST['stripeToken']; // Make sure this matches the name attribute of your Stripe.js token input field
+    $eid = $_POST['editid'];
+    $customerName = $_POST['customer_name'];
+    $customerEmail = $_POST['customer_email'];
+
+    $token = $_POST['stripeToken'];
     $amount = $_POST['stripeAmount'];
+    $amountInCents = (int) ($amount * 100);
 
     try {
-        // Create a charge using the Stripe API
-        $charge = \Stripe\Charge::create([
-            'amount' => $amount, // Amount in cents
-            'currency' => 'usd',
-            'source' => $token,
-            'description' => 'Total Booking charge',
+        // Create a customer
+        $customer = \Stripe\Customer::create([
+            'email' => $customerEmail,
+            'name' => $customerName,
+            'source' => $token, // Attach the payment source to the customer
         ]);
 
-        // Payment success logic
+        // Create a charge using the customer ID
+        $charge = \Stripe\Charge::create([
+            'amount' => $amountInCents,
+            'currency' => 'NPR',
+            'customer' => $customer->id, // Use the customer ID here
+            'description' => 'Total Booking charge for ' . $customerName,
+            'metadata' => [
+                'customer' => $customerName,
+            ],
+        ]);
+
         echo "Payment successful!";
+
+        // Include your database update logic here
+        // Update the 'payment' field in your database to 1
+        $updateSql = "UPDATE tblbooking SET Payment = 1, PaymentAmt = :amount WHERE ID = :eid";
+        $updateQuery = $dbh->prepare($updateSql);
+        $updateQuery->bindParam(':eid', $eid, PDO::PARAM_STR);
+        $updateQuery->bindParam(':amount', $amount, PDO::PARAM_STR);
+        $updateQuery->execute();
+
     } catch (\Stripe\Exception\CardException $e) {
-        // Card was declined
         echo $e->getError()->message;
     } catch (\Stripe\Exception\RateLimitException $e) {
-        // Too many requests made to the API too quickly
         echo $e->getError()->message;
     } catch (\Stripe\Exception\InvalidRequestException $e) {
-        // Invalid parameters were supplied to Stripe's API
         echo $e->getError()->message;
     } catch (\Stripe\Exception\AuthenticationException $e) {
-        // Authentication with Stripe's API failed
         echo $e->getError()->message;
     } catch (\Stripe\Exception\ApiConnectionException $e) {
-        // Network communication with Stripe failed
         echo $e->getError()->message;
     } catch (\Stripe\Exception\ApiErrorException $e) {
-        // Generic error
         echo $e->getError()->message;
     }
 } else {
     echo "Error: Stripe token is missing.";
 }
 
-// Log to error log
 error_log(print_r($_POST, true));
-
-// Print to browser (for debugging)
 print_r($_POST);
 ?>

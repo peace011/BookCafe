@@ -46,8 +46,8 @@ if (strlen($_SESSION['odmsaid']==0)) {
                                 <div class="block-content">
                                    
                                     <form method="post" name="bwdatesreport" action="booking-bwdates-reports-details.php">
-                                        
-                                        <div class="form-group row">
+                                        <!-- simple choosing date -->
+                                        <!-- <div class="form-group row">
                                             <label class="col-12" for="register1-email">From Date:</label>
                                             <div class="col-12">
                                                  <input type="date" class="form-control" id="fromdate" name="fromdate" value="" required='true'>
@@ -58,7 +58,23 @@ if (strlen($_SESSION['odmsaid']==0)) {
                                             <div class="col-12">
                                                 <input type="date" class="form-control" id="todate" name="todate" value="" required='true'>
                                             </div>
+                                        </div> -->
+
+                                        <!-- From- to date where to date strts from From date -->
+                                        <div class="form-group row">
+                                        <label class="col-12" for="register1-email">From Date:</label>
+                                        <div class="col-12">
+                                            <input type="date" class="form-control" id="fromdate" name="fromdate" value="" required='true' oninput="setMinToDate()">
                                         </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-12" for="register1-email">To Date:</label>
+                                        <div class="col-12">
+                                            <input type="date" class="form-control" id="todate" name="todate" value="" required='true' disabled>
+                                        </div>
+                                    </div>
+
+
                                       
                                         <div class="form-group row">
                                             <div class="col-12">
@@ -94,6 +110,18 @@ if (strlen($_SESSION['odmsaid']==0)) {
         <script src="assets/js/core/jquery.countTo.min.js"></script>
         <script src="assets/js/core/js.cookie.min.js"></script>
         <script src="assets/js/codebase.js"></script>
+         <script>
+        function setMinToDate() {
+            // Get the selected date from the "From Date" input
+            var fromDate = document.getElementById("fromdate").value;
+            
+            // Set the minimum date for the "To Date" input to the selected date
+            document.getElementById("todate").min = fromDate;
+            
+            // Enable the "To Date" input
+            document.getElementById("todate").disabled = false;
+        }
+    </script>
     </body>
 </html>
 <?php }  ?>

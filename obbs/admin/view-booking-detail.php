@@ -1,7 +1,10 @@
+
 <?php
+
 session_start();
 error_reporting(0);
 include('includes/dbconnection.php');
+
 
 if (strlen($_SESSION['odmsaid']) == 0) {
     header('location:logout.php');
@@ -32,11 +35,7 @@ if (strlen($_SESSION['odmsaid']) == 0) {
 
         if ($result2) {
             $currentAvailability = $result2['SerAvailable'];
-          //   if ($currentAvailability == 0) {
-          //     echo '<script>alert("Book is unavailable")</script>';
-          //     echo "<script>window.location.href ='all-booking.php'</script>";
-          //     exit; // Stop further execution
-          // }
+  
           
             $newAvailability = $currentAvailability - 1;
 
@@ -47,38 +46,64 @@ if (strlen($_SESSION['odmsaid']) == 0) {
             $query3->bindParam(':serviceid', $serviceid, PDO::PARAM_INT);
             $query3->execute();
 
+          }
 
-////table ko
-            // Get the EventType (table name) from tblbooking for the selected booking
-            $sql_get_event_type = "SELECT EventType FROM tblbooking WHERE ID = :eid";
-            $query_get_event_type = $dbh->prepare($sql_get_event_type);
-            $query_get_event_type->bindParam(':eid', $eid, PDO::PARAM_INT);
-            $query_get_event_type->execute();
-            $row_get_event_type = $query_get_event_type->fetch();
-        
-            if ($row_get_event_type) {
-                $eventType = $row_get_event_type['EventType'];
-        
-                // Update the status of the selected table (EventType) in the tbleventtype table to "inactive"
-                $sql_update_event_type_status = "UPDATE tbleventtype SET EventStatus = '0' WHERE EventType = :eventType";
-                $query_update_event_type_status = $dbh->prepare($sql_update_event_type_status);
-                $query_update_event_type_status->bindParam(':eventType', $eventType, PDO::PARAM_STR);
-                $query_update_event_type_status->execute();
-            }
-        }
+                // Fetch the TableType and AvailableDate associated with the booking
+                $sqlBookingTable = "SELECT TableType, BookingFrom FROM tblbooking WHERE ID=:eid";
+                $queryBookingTable = $dbh->prepare($sqlBookingTable);
+                $queryBookingTable->bindParam(':eid', $eid, PDO::PARAM_STR);
+                $queryBookingTable->execute();
+                $resultBookingTable = $queryBookingTable->fetch(PDO::FETCH_ASSOC);
+
+                if ($resultBookingTable) {
+                    $tableType = $resultBookingTable['TableType'];
+                    $bookingDate = $resultBookingTable['BookingFrom'];
+
+                //     // Update the availability status of the table for the specific date
+                //     $sqlUpdateTableStatus = "UPDATE tbltableavailability SET AvailableStatus = '0' WHERE TableType = :tableType AND AvailableDate = :bookingDate";
+                //     $queryUpdateTableStatus = $dbh->prepare($sqlUpdateTableStatus);
+                //     $queryUpdateTableStatus->bindParam(':tableType', $tableType, PDO::PARAM_STR);
+                //     $queryUpdateTableStatus->bindParam(':bookingDate', $bookingDate, PDO::PARAM_STR);
+                //     $queryUpdateTableStatus->execute();
+                // }
+                // Fetch AvailableTime and AvailableEndTime from tbltableavailability
+    $sqlFetchAvailableTime = "SELECT AvailableTime, AvailableEndTime FROM tbltableavailability WHERE TableType = :tableType AND AvailableDate = :bookingDate";
+    $queryFetchAvailableTime = $dbh->prepare($sqlFetchAvailableTime);
+    $queryFetchAvailableTime->bindParam(':tableType', $tableType, PDO::PARAM_STR);
+    $queryFetchAvailableTime->bindParam(':bookingDate', $bookingDate, PDO::PARAM_STR);
+    $queryFetchAvailableTime->execute();
+    $resultAvailableTime = $queryFetchAvailableTime->fetch(PDO::FETCH_ASSOC);
+
+    if ($resultAvailableTime) {
+        $availableTime = $resultAvailableTime['AvailableTime'];
+        $availableEndTime = $resultAvailableTime['AvailableEndTime'];
+
+        // Update the availability status of the table for the specific date and time range
+        $sqlUpdateTableStatus = "UPDATE tbltableavailability SET AvailableStatus = '0' WHERE TableType = :tableType AND AvailableDate = :bookingDate AND AvailableTime = :availableTime AND AvailableEndTime = :availableEndTime";
+        $queryUpdateTableStatus = $dbh->prepare($sqlUpdateTableStatus);
+        $queryUpdateTableStatus->bindParam(':tableType', $tableType, PDO::PARAM_STR);
+        $queryUpdateTableStatus->bindParam(':bookingDate', $bookingDate, PDO::PARAM_STR);
+        $queryUpdateTableStatus->bindParam(':availableTime', $availableTime, PDO::PARAM_STR);
+        $queryUpdateTableStatus->bindParam(':availableEndTime', $availableEndTime, PDO::PARAM_STR);
+        $queryUpdateTableStatus->execute();
+    }
+  }
+
+    
     
 
         
         
         echo '<script>alert("Remark has been updated")</script>';
         echo "<script>window.location.href ='all-booking.php'</script>";
+        //  Approved
     }
 
   }
 ?>
 
 
-?>
+
 <!doctype html>
  <html lang="en" class="no-focus"> <!--<![endif]-->
     <head>
@@ -119,14 +144,18 @@ if (strlen($_SESSION['odmsaid']) == 0) {
                                     <?php
                   $eid=$_GET['editid'];
 
-// $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.EventType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.UpdationDate,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID  where tblbooking.ID=:eid";
-  //  $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.EventType,tblbooking.ItemID,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.UpdationDate,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID  where tblbooking.ID=:eid";
-  $sql = "SELECT tbluser.FullName, tbluser.MobileNumber, tbluser.Email, tblbooking.BookingID, tblbooking.BookingDate, tblbooking.BookingFrom, tblbooking.BookingTo, tblbooking.EventType, tblbooking.ItemID, tblbooking.Numberofguest, tblbooking.Message, tblbooking.Remark, tblbooking.Status, tblbooking.UpdationDate, tblservice.ServiceName, tblservice.SerDes, tblservice.ServicePrice, tblitem.ItemName, tblitem.ItemPrice
-  FROM tblbooking
-  LEFT JOIN tblservice ON tblbooking.ServiceID = tblservice.ID
-  LEFT JOIN tblitem ON tblbooking.ItemID = tblitem.ID
-  JOIN tbluser ON tbluser.ID = tblbooking.UserID
-  WHERE tblbooking.ID=:eid";
+//  $sql = "SELECT tbluser.FullName, tbluser.MobileNumber, tbluser.Email,tblbooking.TableType,tbltable.TableCapacity,tbltable.tableType, tblbooking.BookingID, tblbooking.BookingDate, tblbooking.BookingFrom, tblbooking.BookingTo, tblbooking.TableType, tblbooking.ServiceStatus, tblbooking.Numberofguest, tblbooking.Message, tblbooking.Remark, tblbooking.Status, tblbooking.Payment, tblbooking.UpdationDate, tblservice.ServiceName, tblservice.SerDes, tblservice.ServicePrice, tblitem.ItemName, tblitem.ItemPrice
+//   FROM tblbooking
+//   LEFT JOIN tblservice ON tblbooking.ServiceID = tblservice.ID
+//   LEFT JOIN tblitem ON tblbooking.ItemID = tblitem.ID
+//   LEFT JOIN tbltable ON tblbooking.TableType = tbltable.TableType
+//   JOIN tbluser ON tbluser.ID = tblbooking.UserID
+//   WHERE tblbooking.ID=:eid";
+$sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.TableType,tbltable.TableCapacity,tbltable.tableType,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.TableType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.Payment,tblbooking.UpdationDate,tblbooking.ServiceStatus,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice, tbltableavailability.AvailableTime, tbltableavailability.AvailableEndTime from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID 
+join tbltable on tblbooking.TableType = tbltable.TableType
+   join tbltableavailability on tbltableavailability.TableType = tblbooking.TableType 
+   and tblbooking.BookingFrom = tbltableavailability.AvailableDate
+where tblbooking.ID=:eid GROUP BY tblbooking.BookingID" ;
 
 
 $query = $dbh -> prepare($sql);
@@ -151,44 +180,44 @@ foreach($results as $row)
      <th>Mobile Number</th>
     <td><?php  echo $row->MobileNumber;?></td>
   </tr>
-  
+ 
 
   <tr>
-    
    <th>Email</th>
     <td><?php  echo $row->Email;?></td>
-     <th>Booking Date</th>
+    <th>Booking Date</th>
     <td><?php  echo $row->BookingFrom;?></td>
+    
   </tr>
 
    <tr>
-   <th>Booking Time</th>
-    <td><?php  echo $row->BookingTo;?></td>
-    <th>Number of Guest</th>
-    <td><?php  echo $row->Numberofguest;?></td>
-  </tr>
+   <th>Start Time</th>
+   <td><?php echo date('h:i A', strtotime($row->AvailableTime));?></td>
+    <th>End Time</th>
+    <td><?php echo date('h:i A', strtotime($row->AvailableEndTime));?></td>  </tr>
  
   <tr>
     
     <th>Table Type</th>
-    <td><?php  echo $row->EventType;?></td>
-    <th>Message</th>
-    <td><?php  echo $row->Message;?></td>
+    <td><?php  echo $row->TableType;?></td>
+    <th>Table Capacity</th>
+    <td><?php  echo $row->TableCapacity;?></td>
+   
   </tr>
 
   <tr>
     <th>Book Name</th>
     <td><?php  echo $row->ServiceName;?></td>
     <th>Book Price</th>
-    <td>$<?php  echo $row->ServicePrice;?></td>
+    <td>Rs.<?php  echo $row->ServicePrice;?></td>
   
   </tr>
 
    <tr>
-    <th>Table Price</th>
-    <td>$100</td>
     <th>Apply Date</th>
     <td><?php  echo $row->BookingDate;?></td>
+    <th>Message</th>
+    <td><?php  echo $row->Message;?></td>
   </tr>
 
 
@@ -196,20 +225,7 @@ foreach($results as $row)
 <tr>
   <th> Item Name</th>
 <td>
-  <!-- Single itemname -->
-    <!-- <?php
-    // ItemID is directly accessible from the $row object
-    // $itemid = $row->ItemID;
-    // $categorySql = "SELECT ItemName FROM tblitem WHERE ID = '$itemid'";
-    // $categoryQuery = $dbh->prepare($categorySql);
-    // $categoryQuery->execute();
-    // $categoryResult = $categoryQuery->fetch(PDO::FETCH_OBJ);
-    // if ($categoryQuery->rowCount() > 0) {
-    //     echo $categoryResult->ItemName;
-    // }
-    ?> -->
-
-    <!-- Array itemname -->
+ 
     <?php
 $eid = $_GET['editid'];
 
@@ -257,14 +273,22 @@ echo '</ul>'; // End the unordered list
  // Calculate the Total Price (Item Price + Service Price)
 //  $totalPrice = $row->ItemPrice + $row->ServicePrice +100;
  $totalPrice += $row->ServicePrice; // Add the book price
-        $totalPrice += 100; // Add the table price (assuming it's a fixed value of $100)
-    
+        
  ?>
  <td colspan="3">Rs.<?php echo $totalPrice; ?></td>
   </tr>
 
 
-  
+  <tr>
+  <th>Number of Guest</th>
+    <td><?php  echo $row->Numberofguest;?></td>
+    <th >Admin Remark</th>
+    <?php if($row->Status==""){ ?>
+
+                     <td><?php echo "Not Updated Yet"; ?></td>
+<?php } else { ?>                  <td><?php  echo htmlentities($row->Remark);?>
+                  </td>
+                  <?php } ?>
 
   <tr>
      <th>Order Final Status</th>
@@ -289,18 +313,38 @@ if($row->Status=="")
 
 
      ;?></td>
-     <th >Admin Remark</th>
-    <?php if($row->Status==""){ ?>
 
-                     <td><?php echo "Not Updated Yet"; ?></td>
-<?php } else { ?>                  <td><?php  echo htmlentities($row->Remark);?>
-                  </td>
-                  <?php } ?>
+<th>Service Status</th>
+    <td> 
+     <?php $ServiceStatus = trim($row->ServiceStatus); // Trim any leading/trailing whitespace
+
+      if ($ServiceStatus === '1' || $ServiceStatus === 1) {
+          echo 'Returned';
+      }  if ($ServiceStatus === '0' || $ServiceStatus === 0) {
+          echo 'Not Returned';
+      }?></td>
+   
   </tr>
 
 
 
+  <tr>
+ 
+    <th>Payment Status</th>
+    <td>
+        <?php  
+            $paymentStatus = trim($row->Payment); // Trim any leading/trailing whitespace
 
+            if ($paymentStatus === '1' || $paymentStatus === 1) {
+                echo 'Paid';
+            }  if ($paymentStatus === '0' || $paymentStatus === 0) {
+                echo 'Unpaid';
+            }
+        ?>
+    </td>
+
+
+</tr>
 
 
 

@@ -55,13 +55,15 @@ if (strlen($_SESSION['odmsaid']==0)) {
                                         <th class="d-none d-sm-table-cell">Email</th>
                                         <th class="d-none d-sm-table-cell">Booking Date</th>
                                         <th class="d-none d-sm-table-cell">Status</th>
+                                        <th class="d-none d-sm-table-cell">ServiceStatus</th>
+
                                         <th class="d-none d-sm-table-cell" style="width: 15%;">Action</th>
                                        </tr>
                                 </thead>
                                 <tbody>
                                     <?php
 
-  $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.ID as bid,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.Status,tblbooking.ID ,tblbooking.ServiceID, tblbooking.EventType from tblbooking join tbluser on tbluser.ID=tblbooking.UserID";
+  $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.ID as bid,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.Status,tblbooking.ID ,tblbooking.ServiceID, tblbooking.TableType, tblbooking.ServiceStatus from tblbooking join tbluser on tbluser.ID=tblbooking.UserID";
 
 
 
@@ -106,8 +108,35 @@ foreach($results as $row)
                                         <td class="d-none d-sm-table-cell">
                                             <span class="badge badge-primary"><?php  echo htmlentities($row->Status);?></span>
                                         </td>
+                                        
+                                        <td class="d-none d-sm-table-cell">
+    <?php
+    $badgeClass = ($row->ServiceStatus == "1") ? 'badge-primary' : 'badge-secondary';
+    ?>
+    <span class="badge <?php echo $badgeClass; ?>">
+        <?php
+        if ($row->ServiceStatus == "1") {
+            echo "Returned";
+        } if ($row->ServiceStatus == "0") {
+                echo "Not Returned"; // Display some default text or handle it as per your requirement
+        }
+        ?>
+    </span>
+</td>
+
+
 <?php } ?> 
-                                       <td class="d-none d-sm-table-cell"><a href="view-booking-detail.php?editid=<?php echo htmlentities ($row->ID);?>&&bookingid=<?php echo htmlentities ($row->BookingID);?>&&serviceid=<?php echo htmlentities ($row->ServiceID);?>&&tablestatus=<?php echo htmlentities ($row->EventType);?>"><i class="fa fa-eye" aria-hidden="true"></i></a></td>
+                                        <td class="d-none d-sm-table-cell"> 
+                                            <?php
+											if ($row->ServiceStatus == "1") {
+												echo '<button class="btn btn-success btn-sm" disabled>Return</button>';
+											} else {
+												echo '<a href="return-services.php?editid=' . htmlentities($row->ID) . '&&bookingid=' . htmlentities($row->BookingID) . '" class="btn btn-success btn-sm" onclick="return confirm(\'Are you sure you want to return this book?\')">Return</a>';
+											}
+
+											?></td>
+                                    
+                                       <td class="d-none d-sm-table-cell"><a href="view-booking-detail.php?editid=<?php echo htmlentities ($row->ID);?>&&bookingid=<?php echo htmlentities ($row->BookingID);?>&&serviceid=<?php echo htmlentities ($row->ServiceID);?>&&tablestatus=<?php echo htmlentities ($row->TableType);?>"><i class="fa fa-eye" aria-hidden="true"></i></a></td>
                                      
 
                                      

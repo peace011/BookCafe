@@ -5,6 +5,7 @@ include('includes/dbconnection.php');
 if (strlen($_SESSION['obbsuid']==0)) {
   header('location:logout.php');
   } else{
+	
    
 
 ?>
@@ -77,7 +78,7 @@ if (strlen($_SESSION['obbsuid']==0)) {
                                 <tbody>
 <?php
 $uid=$_SESSION['obbsuid'];
-$sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.Status,tblbooking.ID from tblbooking join tbluser on tbluser.ID=tblbooking.UserID where tblbooking.UserID='$uid'";
+$sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.Status,tblbooking.ID,tblbooking.ServiceStatus from tblbooking join tbluser on tbluser.ID=tblbooking.UserID where tblbooking.UserID='$uid'";
 $query = $dbh -> prepare($sql);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
@@ -107,7 +108,19 @@ foreach($results as $row)
                                             <span class="badge badge-primary"><?php  echo htmlentities($row->Status);?></span>
                                         </td>
 <?php } ?> 
-                                         <td class="d-none d-sm-table-cell"><a href="view-booking-detail.php?editid=<?php echo htmlentities ($row->ID);?>&&bookingid=<?php echo htmlentities ($row->BookingID);?>"><i class="fa fa-eye" aria-hidden="true"></i></a></td>
+                                         <td class="d-none d-sm-table-cell"><a href="view-booking-detail.php?editid=<?php echo htmlentities ($row->ID);?>&&bookingid=<?php echo htmlentities ($row->BookingID);?>"><i class="fa fa-eye" aria-hidden="true"></i></a>
+										 <a href="cancel-booking.php?bookingid=<?php echo htmlentities($row->BookingID);?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel</a>
+										 <!-- <a href="return-services.php?editid=<?php echo htmlentities ($row->ID);?>&&bookingid=<?php echo htmlentities($row->BookingID);?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to return this book?')">Return</a> -->
+										 <?php
+											if ($row->ServiceStatus == "1") {
+												echo '<button class="btn btn-success btn-sm" disabled>Return</button>';
+											} else {
+												echo '<a href="return-services.php?editid=' . htmlentities($row->ID) . '&&bookingid=' . htmlentities($row->BookingID) . '" class="btn btn-success btn-sm" onclick="return confirm(\'Are you sure you want to return this book?\')">Return</a>';
+											}
+											?>
+										</td>
+
+			
                                     </tr>
                                     <?php $cnt=$cnt+1;}} ?> 
                                 

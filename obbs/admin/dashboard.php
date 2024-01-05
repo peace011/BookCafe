@@ -139,7 +139,7 @@ $totalserv=$query->rowCount();
                             <a class="block text-center" href="manage-event-type.php">
                                 <div class="block-content ribbon ribbon-bookmark ribbon-crystal ribbon-left bg-gd-sea">
                                      <?php 
-$sql ="SELECT ID from tbleventtype";
+$sql ="SELECT ID from tbltable";
 $query = $dbh -> prepare($sql);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);

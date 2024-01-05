@@ -13,7 +13,7 @@ if (strlen($_SESSION['odmsaid']) == 0) {
     }
 
     // Retrieve existing table information
-    $sql = "SELECT * FROM tbleventtype WHERE ID = :editid";
+    $sql = "SELECT * FROM tbltable WHERE ID = :editid";
     $query = $dbh->prepare($sql);
     $query->bindParam(':editid', $editid, PDO::PARAM_INT);
     $query->execute();
@@ -28,14 +28,16 @@ if (strlen($_SESSION['odmsaid']) == 0) {
     if (isset($_POST['submit'])) {
         $event_id = $_POST['event_id'];
         $event_type = $_POST['event_type'];
+        $event_capacity = $_POST['event_capacity'];
         $event_status = $_POST['event_status'];
 
 
         // Update table details in the database
-        $sql = "UPDATE tbleventtype SET EventType = :event_type, EventStatus= :event_status WHERE ID = :event_id";
+        $sql = "UPDATE tbltable SET TableType = :event_type,TableCapacity = :event_capacity, TableStatus= :event_status WHERE ID = :event_id";
         $query = $dbh->prepare($sql);
         $query->bindParam(':event_id', $event_id, PDO::PARAM_INT);
         $query->bindParam(':event_type', $event_type, PDO::PARAM_STR);
+        $query->bindParam(':event_capacity', $event_capacity, PDO::PARAM_STR);
         $query->bindParam(':event_status', $event_status, PDO::PARAM_STR);
 
         $query->execute();
@@ -76,16 +78,20 @@ if (strlen($_SESSION['odmsaid']) == 0) {
                             <input type="hidden" name="event_id" value="<?php echo $table->ID; ?>">
                             <div class="form-group">
                                 <label for="event_type">Table Type</label>
-                                <input type="text" id="event_type" name="event_type" class="form-control" value="<?php echo $table->EventType; ?>" required>
+                                <input type="text" id="event_type" name="event_type" class="form-control" value="<?php echo $table->TableType; ?>" required>
                             </div>
                             <div class="form-group">
+                                <label for="event_type">Table Capacity</label>
+                                <input type="text" id="event_type" name="event_capacity" class="form-control" value="<?php echo $table->TableCapacity; ?>" required>
+                            </div>
+                            <!-- <div class="form-group">
                                 <label for="event_type">Table Status</label>
-                                <!-- <input type="text" id="event_type" name="event_type" class="form-control" value="<?php echo $table->EventStatus; ?>" required> -->
-                                <select name="event_status" id="event_status" class="form-control" required>
+                                <!-- <input type="text" id="event_type" name="event_type" class="form-control" value="<?php echo $table->TableStatus; ?>" required> -->
+                                <!-- <select name="event_status" id="event_status" class="form-control" required>
                                <option value="1" <?php if ($event_status == "1") { echo "selected"; } ?>>Active</option>
                                  <option value="0">Inactive</option>
-			</select>
-                            </div>
+			</select> -->
+                              </div> 
 
                             <button type="submit" name="submit" class="btn btn-primary">Update Table</button>
                         </form>

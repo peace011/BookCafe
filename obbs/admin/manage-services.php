@@ -59,6 +59,7 @@ $query->execute();
                                 <thead>
                                     <tr>
                                         <th class="text-center"></th>
+                                        <th class="d-none d-sm-table-cell">Book Image</th>
                                         <th>Book Name</th>
                                         <th class="d-none d-sm-table-cell">Book Author</th>
 
@@ -83,12 +84,13 @@ foreach($results as $row)
 {               ?>
                                     <tr>
                                         <td class="text-center"><?php echo htmlentities($cnt);?></td>
+                                        <td class="font-w600"><?php echo '<img src="' . $row->ServiceImage . '" alt="Service Image" style="max-width: 50px; max-height: 50px;">'; ?></td>
                                         <td class="font-w600"><?php  echo htmlentities($row->ServiceName);?></td>
                                         <td class="font-w600"><?php  echo htmlentities($row->ServiceAuthor);?></td>
                                         <!-- <td class="font-w600"><?php  echo htmlentities($row->SerDes);?></td> -->
 
 
-                                        <td class="d-none d-sm-table-cell">Rs.<?php  echo htmlentities($row->ServicePrice);?></td>
+                                        <td class="d-none d-sm-table-cell">$<?php  echo htmlentities($row->ServicePrice);?></td>
                                         <td class="d-none d-sm-table-cell"><?php  echo htmlentities($row->SerAvailable);?></td>
 
                                         <td class="d-none d-sm-table-cell">

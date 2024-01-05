@@ -75,7 +75,13 @@ if (strlen($_SESSION['obbsuid']==0)) {
 
 $eid=$_GET['editid'];
 
-$sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.EventType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.UpdationDate,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID  where tblbooking.ID=:eid";
+// $sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.TableType,tbltable.TableCapacity,tbltable.tableType,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.TableType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.Payment,tblbooking.UpdationDate,tblbooking.ServiceStatus,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID join tbltable on tblbooking.TableType = tbltable.TableType
+// where tblbooking.ID=:eid";
+$sql="SELECT tbluser.FullName,tbluser.MobileNumber,tbluser.Email,tblbooking.TableType,tbltable.TableCapacity,tbltable.tableType,tblbooking.BookingID,tblbooking.BookingDate,tblbooking.BookingFrom,tblbooking.BookingTo,tblbooking.TableType,tblbooking.Numberofguest,tblbooking.Message, tblbooking.Remark,tblbooking.Status,tblbooking.Payment,tblbooking.UpdationDate,tblbooking.ServiceStatus,tblservice.ServiceName,tblservice.SerDes,tblservice.ServicePrice, tbltableavailability.AvailableTime, tbltableavailability.AvailableEndTime from tblbooking join tblservice on tblbooking.ServiceID=tblservice.ID join tbluser on tbluser.ID=tblbooking.UserID 
+join tbltable on tblbooking.TableType = tbltable.TableType
+   join tbltableavailability on tbltableavailability.TableType = tblbooking.TableType 
+   and tblbooking.BookingFrom = tbltableavailability.AvailableDate
+where tblbooking.ID=:eid GROUP BY tblbooking.BookingID" ;
 $query = $dbh -> prepare($sql);
 $query-> bindParam(':eid', $eid, PDO::PARAM_STR);
 $query->execute();
@@ -108,32 +114,33 @@ foreach($results as $row)
     <td><?php  echo $row->BookingFrom;?></td>
   </tr>
 
-   <tr>
-   <th>Booking Time</th>
-    <td><?php  echo $row->BookingTo;?></td>
-    <th>Number of Guest</th>
-    <td><?php  echo $row->Numberofguest;?></td>
-  </tr>
+  <tr>
+   <th>Start Time</th>
+   <td><?php echo date('h:i A', strtotime($row->AvailableTime));?></td>
+    <th>End Time</th>
+    <td><?php echo date('h:i A', strtotime($row->AvailableEndTime));?></td>  </tr>
+  <tr>
  
   <tr>
     
     <th>Table Type</th>
-    <td><?php  echo $row->EventType;?></td>
-    <th>Message</th>
-    <td><?php  echo $row->Message;?></td>
+    <td><?php  echo $row->TableType;?></td>
+    <th>Table Capacity</th>
+    <td><?php  echo $row->TableCapacity;?></td>
   </tr>
   <tr>
     
     <th>Book Name</th>
     <td><?php  echo $row->ServiceName;?></td>
 	<th>Book Price</th>
-    <td>$<?php  echo $row->ServicePrice;?></td>
+    <td>Rs.<?php  echo $row->ServicePrice;?></td>
   </tr>
    <tr>
-    <th>Table Price</th>
-    <td>$100</td>
+   
     <th>Apply Date</th>
     <td><?php  echo $row->BookingDate;?></td>
+    <th>Message</th>
+    <td><?php  echo $row->Message;?></td>
   </tr>
 
   <tr>
@@ -152,7 +159,7 @@ $querySelectItemIDs->execute();
 $resultItemIDs = $querySelectItemIDs->fetchAll(PDO::FETCH_ASSOC);
 
 echo '<ul>'; // Start an unordered list to display items and quantities
-
+$totalPrice=0;
 // Iterate through the ItemIDs and fetch and display their names, quantities, and prices
 foreach ($resultItemIDs as $itemData) {
     $itemID = $itemData['ItemID'];
@@ -186,12 +193,26 @@ echo '</ul>'; // End the unordered list
  // Calculate the Total Price (Item Price + Service Price)
 //  $totalPrice = $row->ItemPrice + $row->ServicePrice +100;
 $totalPrice += $row->ServicePrice; // Add the book price
-$totalPrice += 100; // Add the table price (assuming it's a fixed value of $100)
+// $totalPrice += 100; // Add the table price (assuming it's a fixed value of $100)
 
  ?>
  <td colspan="3">Rs.<?php echo $totalPrice; ?></td>
   </tr>
 
+
+
+
+<tr>
+  <th>Number of Guest</th>
+    <td><?php  echo $row->Numberofguest;?></td>
+    <th >Admin Remark</th>
+    <?php if($row->Status==""){ ?>
+
+                     <td><?php echo "Not Updated Yet"; ?></td>
+<?php } else { ?>                  <td><?php  echo htmlentities($row->Remark);?>
+                  </td>
+                  <?php } ?>
+</tr>
 
   <tr>
     
@@ -217,28 +238,57 @@ if($row->Status=="")
 
 
      ;?></td>
-     <th >Admin Remark</th>
-    <?php if($row->Status==""){ ?>
 
-                     <td><?php echo "Not Updated Yet"; ?></td>
-<?php } else { ?>                  <td><?php  echo htmlentities($row->Remark);?>
-                  </td>
-                  <?php } ?>
+<th>Service Status</th>
+    <td>
+      <?php $ServiceStatus = trim($row->ServiceStatus); // Trim any leading/trailing whitespace
+
+if ($ServiceStatus === '1' || $ServiceStatus === 1) {
+    echo 'Returned';
+}  if ($ServiceStatus === '0' || $ServiceStatus === 0) {
+    echo 'Not Returned';
+}?>
+</td>
+    
   </tr>
+
+
+  <tr>
+ 
+    <th>Payment Status</th>
+    <td>
+        <?php  
+            $paymentStatus = trim($row->Payment); // Trim any leading/trailing whitespace
+
+            if ($paymentStatus === '1' || $paymentStatus === 1) {
+                echo 'Paid';
+            }  if ($paymentStatus === '0' || $paymentStatus === 0) {
+                echo 'Unpaid';
+            }
+        ?>
+    </td>
+</tr>
+
+
+
   
  
 <?php $cnt=$cnt+1;}} ?>
 
 </table> 
+
 					</div>
 				<div class="clearfix"> </div>
 
 
 
+        <?php
+        if ($paymentStatus != '1') {
+        ?>
        <!-- Your payment form -->
        <form action="charge.php" method="post" id="payment-form">
   <!-- Other form fields -->
-  <label for="amount">Amount (in cents):</label>
+  <label for="amount">Amount (in dollars):</label>
 <input type="text" id="amount" name="amount" required>
 
   <!-- Stripe.js token element -->
@@ -250,12 +300,27 @@ if($row->Status=="")
   <!-- Hidden input for the Stripe token -->
   <input type="hidden" name="stripeToken" id="stripeToken">
   <input type="hidden" name="stripeAmount" id="stripeAmount">
+    <!-- Add a hidden input for the booking ID -->
+    <input type="hidden" name="editid" value="<?php echo $eid; ?>">
+    <input type="hidden" name="customer_name" value="<?php echo htmlentities($row->FullName);?>">
+    <input type="hidden" name="customer_email" value="<?php echo htmlentities($row->Email);?>">
+
+
+    
+  <!-- Submit button -->
+  <!-- <button type="submit">Submit Payment</button> -->
 
   <!-- Submit button -->
-  <button type="submit">Submit Payment</button>
+  <button type="submit" <?php if ($row->Payment == '1') echo 'disabled'; ?>>
+        <?php echo ($row->Payment == '1') ? 'Payment Already Made' : 'Submit Payment'; ?>
+    </button>
+
+
 </form>
 
-
+<?php
+    }
+    ?>
 
 
 
@@ -350,5 +415,7 @@ form.addEventListener('submit', function (event) {
   });
 });
 </script>
+
+
 </body>	
 </html><?php }  ?>

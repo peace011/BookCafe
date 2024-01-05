@@ -20,7 +20,7 @@ if (strlen($_SESSION['odmsaid']==0)) {
                             <i class="fa fa-navicon"></i>
                         </button>
                        
-                        <div class="btn-group" role="group">
+                        <!-- <div class="btn-group" role="group">
                             <button type="button" class="btn btn-circle btn-dual-secondary" id="page-header-options-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa fa-wrench"></i>
                             </button>
@@ -35,12 +35,12 @@ if (strlen($_SESSION['odmsaid']==0)) {
                                 <div class="dropdown-divider"></div>
                                
                             </div>
-                        </div>
+                        </div> -->
                         <!-- END Layout Options -->
 
                         <!-- Color Themes (used just for demonstration) -->
                         <!-- Themes functionality initialized in Codebase() -> uiHandleTheme() -->
-                        <div class="btn-group" role="group">
+                        <!-- <div class="btn-group" role="group">
                             <button type="button" class="btn btn-circle btn-dual-secondary" id="page-header-themes-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa fa-paint-brush"></i>
                             </button>
@@ -83,7 +83,7 @@ if (strlen($_SESSION['odmsaid']==0)) {
                                 <div class="dropdown-divider"></div>
                               
                             </div>
-                        </div>
+                        </div> -->
                         <!-- END Color Themes -->
                     </div>
                     <!-- END Left Section -->

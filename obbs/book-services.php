@@ -25,11 +25,13 @@ if (strlen($_SESSION['obbsuid']) == 0) {
           // Retrieve quantities as an array
     $quantities = $_POST['quantity'];
 
-        // Convert the array to a comma-separated list
-        // $selectedItemsList = implode(',', $selectedItems);
+       
 
+
+
+ 
         // Insert booking details into the 'tblbooking' table
-        $sql = "INSERT INTO tblbooking (BookingID, ServiceID, UserID, BookingFrom, BookingTo, EventType, Numberofguest, Message)
+        $sql = "INSERT INTO tblbooking (BookingID, ServiceID, UserID, BookingFrom, BookingTo, TableType, Numberofguest, Message)
                 VALUES (:bookingid, :bid, :uid, :bookingfrom, :bookingto, :eventtype, :nop, :message)";
 
         $query = $dbh->prepare($sql);
@@ -70,6 +72,8 @@ if (strlen($_SESSION['obbsuid']) == 0) {
             // Commit the database transaction
             $dbh->commit();
 
+
+
             echo '<script>alert("Your Booking Request Has Been Sent. We Will Contact You Soon")</script>';
             echo "<script>window.location.href ='services.php'</script>";
         } catch (PDOException $e) {
@@ -78,6 +82,70 @@ if (strlen($_SESSION['obbsuid']) == 0) {
             // echo '<script>alert("Something Went Wrong. Please try again")</script>';
             echo '<script>alert("Error: ' . $e->getMessage() . '")</script>';
         }
+
+    }
+
+    if (isset($_POST['bookingfrom'])) {
+        $selectedDate = $_POST['bookingfrom'];
+
+        // Fetch available tables for the selected date
+        $sql = "SELECT t.*, a.AvailableTime, a.AvailableEndTime
+                FROM tbltable t
+                LEFT JOIN tbltableavailability a ON t.ID = a.TableID
+                WHERE a.AvailableDate = :selectedDate  AND a.AvailableStatus = 1";
+
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':selectedDate', $selectedDate, PDO::PARAM_STR);
+        $query->execute();
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        // Display available tables
+        if (count($result) > 0) {
+            echo '<h2 style="color: blue; font-size: 18px; font-style:bold">Available Tables for ' . $selectedDate . '</h2>';
+            echo '<table style="width: 100%; border-collapse: collapse; border: 1px solid black;">';
+            echo '<thead>';
+            echo '<tr>';
+            echo '<th style="background-color: #ccc; text-align: center;">Table ID</th>';
+            echo '<th style="background-color: #ccc; text-align: center;">Table Type</th>';
+            echo '<th style="background-color: #ccc; text-align: center;">Table Capacity</th>';
+            echo '<th style="background-color: #ccc; text-align: center;"> Start Time</th>';
+            echo '<th style="background-color: #ccc; text-align: center;"> End Time</th>';
+
+            echo '</tr>';
+            echo '</thead>';
+            echo '<tbody>';
+            foreach ($result as $row) {
+                echo '<tr>';
+                echo '<td style="text-align: center;">' . $row['ID'] . '</td>';
+                echo '<td style="text-align: center;">' . $row['TableType'] . '</td>';
+                echo '<td style="text-align: center;">' . $row['TableCapacity'] . '</td>';
+                // echo '<td style="text-align: center;">' . $row['AvailableTime'] . '</td>';
+                echo '<td style="text-align: center;">' . date('h:i A', strtotime($row['AvailableTime'])) . '</td>';
+                echo '<td style="text-align: center;">' . date('h:i A', strtotime($row['AvailableEndTime'])) . '</td>';
+                // echo '<td style="text-align: center;">' . $row['AvailableEndTime'] . '</td>';
+
+                echo '</tr>';
+            }
+            echo '</tbody>';
+            echo '</table>';
+            
+        } else {
+            echo '<p>No available tables for the selected date.</p>';
+        } 
+         // Display table types dropdown
+    echo '<div class="form-group row">';
+    echo '<label class="col-form-label col-md-4">Type of Table:</label>';
+    echo '<div class="col-md-10">';
+    echo '<select type="text" class="form-control" name="eventtype" required="true">';
+    echo '<option value="">Choose Table Type</option>';
+    foreach ($result as $row) {
+        echo '<option value="' . htmlentities($row['TableType']) . '">' . htmlentities($row['TableType']) . '</option>';
+    }
+    echo '</select>';
+    echo '</div>';
+    echo '</div>';
+
+        exit(); 
     }
 }
 ?>
@@ -119,6 +187,33 @@ if (strlen($_SESSION['obbsuid']) == 0) {
             });
         });
     </script>
+     <script type="text/javascript">
+        $(document).ready(function () {
+            // Event handler for date selection
+            $('#bookDate').change(function () {
+                // Get the selected date
+                var selectedDate = $(this).val();
+
+                // Fetch available tables for the selected date
+                $.ajax({
+                    type: 'POST',
+                    url: '',
+                    data: {
+                        bookingfrom: selectedDate
+                    },
+                    success: function (response) {
+                        // Display the response in a designated div or element
+                        $('#availableTables').html(response);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+
+
 </head>
 <body>
 <!-- banner -->
@@ -136,7 +231,7 @@ if (strlen($_SESSION['obbsuid']) == 0) {
     <div class="container">
         <div class="agile-contact-form">
 
-            <div class="col-md-6 contact-form-right">
+            <div class="col-md-6 contact-form-right" style="width:55%">
                 <div class="contact-form-top">
                     <h3>Book Services</h3>
                 </div>
@@ -148,7 +243,15 @@ if (strlen($_SESSION['obbsuid']) == 0) {
                                 <input type="date" class="form-control" style="font-size: 20px" required="true"
                                        id="bookDate" name="bookingfrom">
                             </div>
+                            
                         </div>
+
+                        <div id="availableTables"></div>
+
+                      
+
+
+
                         <script type="text/javascript">
                             // Get the current date and format it as "YYYY-MM-DD"
                             const currentDate = new Date().toISOString().split('T')[0];
@@ -160,16 +263,19 @@ if (strlen($_SESSION['obbsuid']) == 0) {
                             bookDateInput.setAttribute('min', currentDate);
                         </script>
 
-                        <div class="form-group row">
+                        <!-- <div class="form-group row">
                             <label class="col-form-label col-md-4">Booking Time:</label>
                             <div class="col-md-10">
                                 <?php
                                 // Specify the start and end time for the time slots
+                                // $start_time = strtotime('10:00 AM');
+                                // $end_time = strtotime('5:00 PM');
                                 $start_time = strtotime('10:00 AM');
                                 $end_time = strtotime('5:00 PM');
 
                                 // Specify the interval between time slots (in minutes)
                                 $interval = 60;
+
 
                                 // Create an array to store the time slots
                                 $time_slots = array();
@@ -187,28 +293,11 @@ if (strlen($_SESSION['obbsuid']) == 0) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-group row">
-                            <label class="col-form-label col-md-4">Type of Table:</label>
-                            <div class="col-md-10">
-                                <select type="text" class="form-control" name="eventtype" required="true">
-                                    <option value="">Choose Table Type</option>
-                                    <?php
-                                    $sql2 = "SELECT * from tbleventtype WHERE EventStatus='1' ";
-                                    $query2 = $dbh->prepare($sql2);
-                                    $query2->execute();
-                                    $result2 = $query2->fetchAll(PDO::FETCH_OBJ);
-
-                                    foreach ($result2 as $row) {
-                                        ?>
-                                        <option
-                                            value="<?php echo htmlentities($row->EventType); ?>"><?php echo htmlentities($row->EventType); ?></option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                        </div>
+                        </div> -->
 
 
+
+                      
 
 
 
@@ -225,7 +314,9 @@ if (strlen($_SESSION['obbsuid']) == 0) {
                                     echo '<div class="checkbox">';
                                     echo '<label>';
                                     echo '<input type="checkbox" name="selected_items[]" value="' . htmlentities($row->ID) . '"> ' . htmlentities($row->ItemName);
+                                    echo ' - Price: $'  . htmlentities($row->ItemPrice); 
                                     echo '</label>';
+                                    echo " -   " ;
                                     echo '<input type="number" name="quantity[' . htmlentities($row->ID) . ']" placeholder="Quantity" >';
         
                                     echo '</div>';
@@ -236,12 +327,19 @@ if (strlen($_SESSION['obbsuid']) == 0) {
                         
 
                         <div class="form-group row">
-                            <label class="col-form-label col-md-4">Number of Guests:</label>
+                            <label class="col-form-label col-md-4">Number of People:</label>
                             <div class="col-md-10">
                                 <input type="text" class="form-control" style="font-size: 20px" required="true"
                                        name="nop">
                             </div>
                         </div>
+
+
+
+
+
+
+
 
                         <div class="form-group row">
                             <label class="col-form-label col-md-4">Message (if any):</label>

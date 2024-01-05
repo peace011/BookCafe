@@ -59,9 +59,9 @@ echo "<script>alert('Invalid Details');</script>";
                                 <p class="font-size-h3 font-w600 text-white">
                                    Book Cafe
                                 </p>
-                                <p class="font-italic text-white-op">
+                                <!-- <p class="font-italic text-white-op">
                                     Copyright &copy; <span class="js-year-copy">2020</span>
-                                </p>
+                                </p> -->
                             </div>
                         </div>
                         <div class="hero-static col-md-6 col-xl-4 d-flex align-items-center bg-white invisible" data-toggle="appear" data-class="animated fadeInRight">

@@ -10,12 +10,12 @@ if (strlen($_SESSION['odmsaid']==0)) {
 if(isset($_GET['delid']))
 {
 $rid=intval($_GET['delid']);
-$sql="delete from tbleventtype where ID=:rid";
+$sql="delete from tbltable where ID=:rid";
 $query=$dbh->prepare($sql);
 $query->bindParam(':rid',$rid,PDO::PARAM_STR);
 $query->execute();
  echo "<script>alert('Data deleted');</script>"; 
-  echo "<script>window.location.href = 'manage-table-type.php'</script>";     
+  echo "<script>window.location.href = 'manage-event-type.php'</script>";     
 
 
 }
@@ -60,8 +60,8 @@ $query->execute();
                                     <tr>
                                         <th class="text-center"></th>
                                         <th>Table Name</th>
-
-                                        <th>Table Status</th>
+                                        <th>Table Capacity</th>
+                                        <!-- <th>Table Status</th> -->
                                        
                                         
                                         <th class="d-none d-sm-table-cell">Creation Date</th>
@@ -70,7 +70,7 @@ $query->execute();
                                 </thead>
                                 <tbody>
                                     <?php
-$sql="SELECT * from tbleventtype";
+$sql="SELECT * from tbltable";
 $query = $dbh -> prepare($sql);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
@@ -83,20 +83,20 @@ foreach($results as $row)
                                     <tr>
                                         <td class="text-center"><?php echo htmlentities($cnt);?></td>
 
-                                        <td class="font-w600"><?php  echo htmlentities($row->EventType);?></td>
-                                        
-                                        <td class="font-w600"> <?php  $tablestatus=$row->EventStatus;
-    
-    if( $tablestatus=="1")
-    {
-      echo "Active";
-    }
-    
-    if( $tablestatus=="0")
-    {
-     echo "Inactive";
-    }
-    ?></td>
+                                        <td class="font-w600"><?php  echo htmlentities($row->TableType);?></td>
+                                        <td class="font-w600"><?php  echo htmlentities($row->TableCapacity);?></td>
+                                    <!-- <td class="font-w600"> <?php  $tablestatus=$row->TableStatus;
+                                                
+                                                if( $tablestatus=="1")
+                                                {
+                                                echo "Active";
+                                                }
+                                                
+                                                if( $tablestatus=="0")
+                                                {
+                                                echo "Inactive";
+                                                }
+                                                ?></td>  -->
 
                                         <td class="d-none d-sm-table-cell"><?php  echo htmlentities($row->CreationDate);?></td>
                                        

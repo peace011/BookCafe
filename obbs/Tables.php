@@ -61,7 +61,9 @@ include('includes/dbconnection.php');
 								<tr>
 									<th>S.N</th>
 									<th>Table Name</th>
-									<th>Table Status</th>
+									<th>Table Capacity</th>
+
+									<!-- <th>Table Status</th> -->
 									
 									<!-- <th>Action</th> -->
 								</tr>
@@ -69,7 +71,7 @@ include('includes/dbconnection.php');
 							<tbody>
 							
 								<?php
-$sql="SELECT * from tbleventtype";
+$sql="SELECT * from tbltable";
 $query = $dbh -> prepare($sql);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
@@ -85,9 +87,9 @@ foreach($results as $row)
 
 									<tr>
 									<td><?php echo htmlentities($cnt);?></td>
-									<td><?php  echo htmlentities($row->EventType);?></td>
-									<!-- <td><?php  echo htmlentities($row->EventStatus);?></td> -->
-                                    <td class="font-w600"> <?php  $tablestatus=$row->EventStatus;
+									<td><?php  echo htmlentities($row->TableType);?></td>
+									<td><?php  echo htmlentities($row->TableCapacity);?></td>
+                                    <!-- <td class="font-w600"> <?php  $tablestatus=$row->TableStatus;
     
     if( $tablestatus=="1")
     {
@@ -98,17 +100,20 @@ foreach($results as $row)
     {
      echo "Inactive";
     }
-    ?></td>
-									<!-- <td><?php  echo htmlentities($row->ServicePrice);?></td> -->
-
+    ?></td> -->
+									
 									<?php if($_SESSION['obbsuid']==""){?>
 									<td><a href="login.php" class="btn btn-default">Book Table</a></td>
 									<?php } else {?>
 									<!-- <td><a href="Items.php?bookid=<?php echo $row->ID;?>" class="btn btn-default">Book table</a></td><?php }?> -->
+
+									
 								</tr> <?php $cnt=$cnt+1;}} ?> 
 							</tbody>
 						</table>
 					</div>
+					<!-- <a href="book-services.php" class="btn btn-default" style="background-color:#4169E1; margin-left:40%; margin-top:1%; margin-bottom:1%; color:white;">Book table</a> -->
+
 				<div class="clearfix"> </div>
 			</div>
 		</div>

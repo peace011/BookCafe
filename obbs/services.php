@@ -45,8 +45,7 @@ if ($categoryName == 'all') {
 }
 
 
-// Assuming $books is an array of book names retrieved from the database
-// Your actual array of books
+
 
 // Trie Class for Auto-complete
 class TrieNode {
@@ -96,39 +95,118 @@ $query = $dbh->prepare($sql);
 $query->execute();
 $categories = $query->fetchAll(PDO::FETCH_OBJ);
 
-// Retrieve Previously Booked Categories
-$_SESSION['booked_categories'] = getBookedCategories($_SESSION['obbsuid']);
 
-// Get Previously Booked Categories
-function getBookedCategories($userId) {
+// if (isset($_SESSION['obbsuid'])) {
+//     echo "<p>User ID: " . $_SESSION['obbsuid'] . "</p>";
+// } else {
+//     echo "<p>User ID not set</p>";
+// }
+
+// Example PHP code for recommendation generation
+// $userID = $_SESSION['obbsuid'];
+// echo "<p>User ID: " . $_SESSION['obbsuid'] . "</p>";
+// // $bookID = $_GET['bookID'];
+
+function calculateSimilarity($service1, $service2)
+{
+    $similarity = 0;
+
+    // Add more similarity criteria as needed
+    $author1 = trim(mb_strtolower($service1->ServiceAuthor, 'UTF-8'));
+    $author2 = trim(mb_strtolower($service2->ServiceAuthor, 'UTF-8'));
+
+    if ($author1 === $author2) {
+        $similarity += 1;
+        // echo "Author Matched: +1\n";
+    }
+  if ($service1->CategoryID == $service2->CategoryID) {
+        $similarity += 1;
+        // echo "Category ID Matched: +1\n";
+    }
+    return $similarity;
+}
+
+
+function getUserBookingHistory($userId)
+{
     global $dbh;
 
-    $sql = "SELECT DISTINCT s.CategoryID
-            FROM tblbooking b
+    $sql = "SELECT DISTINCT s.* 
+            FROM tblbooking b 
             JOIN tblservice s ON b.ServiceID = s.ID
             WHERE b.UserID = :userId";
-    $query = $dbh->prepare($sql);
-    $query->bindParam(':userId', $userId, PDO::PARAM_INT);
-    $query->execute();
-    return $query->fetchAll(PDO::FETCH_COLUMN);
+
+    try {
+        $query = $dbh->prepare($sql);
+        $query->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $query->execute();
+        $result = $query->fetchAll(PDO::FETCH_OBJ);
+          // Debugging statements
+        // echo "<pre>User Booking History Query: " . $sql . "</pre>";
+        // echo "<pre>User Booking History Result: ";
+        // print_r($result);
+        // echo "</pre>";
+        return $result;
+    } catch (PDOException $e) {
+        // Handle the exception appropriately, e.g., log the error
+        echo "Error: " . $e->getMessage();
+        return array(); // Return an empty array in case of an error
+    }
 }
 
-// Modify the SQL query based on the selected category or search term
-// ...
+// Retrieve all services from the tblservice table
+$sql = "SELECT * FROM tblservice";
+$query = $dbh->prepare($sql);
+$query->execute();
+$services = $query->fetchAll(PDO::FETCH_OBJ);
 
-// Display Recommended Books Based on Categories
-$previouslyBookedCategories = $_SESSION['booked_categories'];
-$recommendedBooks = [];
-foreach ($previouslyBookedCategories as $category) {
-    $sql = "SELECT * FROM tblservice WHERE CategoryID = :category AND ID NOT IN (SELECT ServiceID FROM tblbooking WHERE UserID = :userId) ORDER BY ServiceName ASC LIMIT 5";
-    $query = $dbh->prepare($sql);
-    $query->bindParam(':category', $category, PDO::PARAM_INT);
-    $query->bindParam(':userId', $_SESSION['obbsuid'], PDO::PARAM_INT);
-    $query->execute();
-    $recommendedBooks[$category] = $query->fetchAll(PDO::FETCH_OBJ);
+// Simulate a user making a booking
+$userId = $_SESSION['obbsuid'];
+
+// Calculate similarity for each service based on the user's booking history
+$userBookingHistory = getUserBookingHistory($userId);
+
+// Extract booked service IDs from the user's booking history
+$bookedServiceIds = array_map(function ($booking) {
+    // echo "Booked Service ID: {$booking->ID}\n"; // Add this line to print the booked service ID
+    return $booking->ID;
+    return $booking->ID;
+}, $userBookingHistory);
+
+// Filter out booked services from the list
+$services = array_filter($services, function ($service) use ($bookedServiceIds) {
+    return !in_array($service->ID, $bookedServiceIds);
+});
+
+foreach ($services as $service) {
+    $totalSimilarity = 0;
+
+    foreach ($userBookingHistory as $booking) {
+        $totalSimilarity += calculateSimilarity($service, $booking);
+        
+        // Print statements for debugging
+        // echo "Similarity between {$service->ServiceName} and Booking ID {$booking->ID}: $totalSimilarity\n";
+    }
+    // / Print total similarity for the current service
+    // echo "Total Similarity for {$service->ServiceName}: $totalSimilarity\n";
+
+    $service->totalSimilarity = $totalSimilarity;
 }
 
+// Sort services by total similarity in descending order
+usort($services, function ($a, $b) {
+    return $b->totalSimilarity - $a->totalSimilarity;
+});
 
+// Get top recommended services
+$numberOfRecommendations = 15;
+$topRecommendations = array_slice($services, 0, $numberOfRecommendations);
+
+// Display recommended services
+// echo "<h3>Recommended Services:</h3>";
+foreach ($topRecommendations as $recommendedService) {
+    // echo '<p>' . $recommendedService->ServiceName . ' by ' . $recommendedService->ServiceAuthor . '</p>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -173,7 +251,7 @@ foreach ($previouslyBookedCategories as $category) {
 
             for (let char of searchTerm) {
                 if (!node.children[char]) {
-                    return suggestions; // Prefix not found, return empty array
+                    return suggestions; // Prefix not found, return an empty array
                 }
                 node = node.children[char];
             }
@@ -211,10 +289,10 @@ foreach ($previouslyBookedCategories as $category) {
 
             // Filter and display books based on the search term
             if (searchTerm === '') {
-                $('#bookList tbody tr').show(); // Show all books when search term is empty
+                $('.book-item').show(); // Show all books when the search term is empty
             } else {
-                $('#bookList tbody tr').each(function () {
-                    const bookName = $(this).find('td:nth-child(2)').text().toLowerCase();
+                $('.book-item').each(function () {
+                    const bookName = $(this).find('.book-title').text().toLowerCase();
                     // Check if the book name starts with the search term
                     if (bookName.startsWith(searchTerm)) {
                         $(this).show();
@@ -227,6 +305,110 @@ foreach ($previouslyBookedCategories as $category) {
     });
 </script>
 
+<style>
+
+        .container{
+            width:1400px;
+            
+        }
+
+        .row {
+                    display: flex;
+                    flex-wrap: wrap;
+                }
+
+        .book-item{
+            width: 25%;
+            box-sizing: border-box;
+         
+            
+        }
+        .recom-book-item{
+            box-sizing: border-box;
+            margin-right: 3%; 
+            margin-left: 3%; 
+            width:100%; 
+        }
+
+        .book-info {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 25px; 
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+
+        }
+        .recom-book-info {
+          border: 1px solid #ddd;
+            padding: 10px;
+            margin: 6px;  
+            width:210px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+       
+        /* Basic Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: 2px solid #3498db; /* Border color */
+            border-radius: 5px; /* Rounded corners */
+            color: #3498db; /* Text color */
+            background-color: #d4d8db; /* Background color */
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+        }
+
+        /* Hover State */
+        .btn:hover {
+            background-color: #3498db; /* Hover background color */
+            color: #fff; /* Hover text color */
+        }
+
+        .slider-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 100%;
+
+        }
+
+        .recom-row {
+                    display: flex;
+                }
+
+            .prev-btn,
+            .next-btn {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 10px;
+                background-color: #3498db;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+            }
+
+            .prev-btn {
+                left: 0;
+            }
+
+            .next-btn {
+                right: 0;
+            }
+
+    </style>
 
 
 
@@ -281,84 +463,72 @@ foreach ($previouslyBookedCategories as $category) {
 </div>
 
 
-	<div class="about-top">
-		<div class="container">
-	
-
-			<div class="wthree-services-bottom-grids">
-				
-			
-				<p class="wow fadeInUp animated" data-wow-delay=".5s">List of services which is prvided by us.</p>
-					<div class="bs-docs-example wow fadeInUp animated" data-wow-delay=".5s">
-					<?php if (!empty($books)) { ?>
-						<table class="table table-bordered" id="bookList">
-							<thead>
-								<tr>
-									<th>S.N</th>
-									<th>Books Name</th>
-									<th>Description</th>
-									<th>Available</th>
-
-									<th>Price</th>
-									<th>Action</th>
-								</tr>
-							</thead>
-							<tbody>
-							
-								<?php
-
-                                $cnt=1;
-
-                                foreach($books as $row)
-                                    { ?>
-								
-								
-
-
-									<tr>
-									<td><?php echo htmlentities($cnt);?></td>
-									<td><?php  echo htmlentities($row->ServiceName);?></td>
-									<td><?php  echo htmlentities($row->SerDes);?></td>
-									<td><?php  echo htmlentities($row->SerAvailable);?></td>
-									<td><?php  echo htmlentities($row->ServicePrice);?></td>
-                                    
-
+<div class="about-top">
+        <div class="container">
+        <?php
+        if (isset($categoryName) && $categoryName != 'all') {
+            echo '<h2> Category: ' . getCategoryName($dbh, $categoryName) . '</h2>';
+        }
+        ?>
+            <div class="wthree-services-bottom-grids">
+                <p class="wow fadeInUp animated" data-wow-delay=".5s">List of services which is provided by us.</p>
+                <div class="bs-docs-example wow fadeInUp animated " data-wow-delay=".5s">
+                    <?php if (!empty($books)) { ?>
+                        <div id="bookList" class="row">
+                            <?php
+                            $cnt = 1;
+                            foreach ($books as $row) {
+                                ?>
+                                <div class="book-item">
+                                    <div class="book-info">
+                                    <a href="services-details.php?bookid=<?php echo $row->ID; ?>"><?php echo '<img src="' . $row->ServiceImage . '" alt="Service Image" style="max-width: 200px; max-height: 200px;  margin-bottom: 11px; ">'; ?></a>
+                                        <p class="book-title" style="font-weight: bold; font-size: larger; "><a href="services-details.php?bookid=<?php echo $row->ID;?>" style="color:black; text-decoration: none;"><?php echo htmlentities($row->ServiceName);?></a></p>
+                                        <p class="book-author">By: <?php echo htmlentities($row->ServiceAuthor); ?></p>
+                                        <p class="book-availability">Availability:<?php echo htmlentities($row->SerAvailable); ?></p>
+                                        <p class="book-price" style="font-weight: bold; ">Price:Rs.<?php echo htmlentities($row->ServicePrice); ?></p>
+                                   
                                     <!-- //disabled -->
                                     <?php if ($row->SerAvailable == 0) { ?>
-                                     <td><button class="btn btn-default" disabled>Book Services</button></td>
+                                        <button class="btn btn-default" disabled>Book Services</button>
                                     <?php } else { ?>
                                         <!-- dis -->
-
-
-
-									 <?php if($_SESSION['obbsuid']==""){?>
-										<td><a href="login.php" class="btn btn-default">Book Services</a></td>
-									<?php } else {?>
-									<td><a href="book-services.php?bookid=<?php echo $row->ID;?>" class="btn btn-default">Book Services</a></td><?php }?>
-
-
-
-                                    <!-- dis -->
+                                        <?php if ($_SESSION['obbsuid'] == "") { ?>
+                                            <a href="login.php" class="btn btn-default">Book Services</a>
+                                        <?php } else { ?>
+                                            <a href="book-services.php?bookid=<?php echo $row->ID; ?>"
+                                                class="btn btn-default">Book Services</a>
+                                        <?php } ?>
+                                        <!-- dis -->
                                     <?php } ?>
-                                    <?php  ?>
-                                    
                                     <!-- dis -->
-
-
-
-								</tr>
-                                 <?php $cnt=$cnt+1;}?> 
-
-
-
-							</tbody>
-						</table>
-
-						<?php } else { ?>
+                                    </div>
+                                </div>
+                                <?php
+                                $cnt++;
+                            }
+                            ?>
+                        </div>
+                    <?php } else { ?>
                         <p>No results found.</p>
                     <?php } ?>
+                </div>
+            </div>
+        </div>
+    </div>
 
-					</div>
+        <!-- Displaying selected category -->
+        <?php
+            function getCategoryName($dbh, $categoryId)
+            {
+                $sql = "SELECT CategoryName FROM tblcategory WHERE ID = :categoryId";
+                $query = $dbh->prepare($sql);
+                $query->bindParam(':categoryId', $categoryId, PDO::PARAM_INT);
+                $query->execute();
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+
+                return ($result) ? htmlentities($result['CategoryName']) : 'Unknown Category';
+            }
+            ?>
 
 
 
@@ -370,68 +540,66 @@ foreach ($previouslyBookedCategories as $category) {
 
 
 
+    <!-- Book Recommendations                         -->
+    <div class="about-top">
+    <div class="container">
+        <div class="wthree-services-bottom-grids">
+            <h3 style="font-weight: bold;">Recommended Books</h3>
+            <div class="bs-docs-example wow fadeInUp animated" data-wow-delay=".5s">
+                <?php if (!empty($books)) { ?>
+                    <div id="bookList" class="row">
+                        <div class="slider-container">
+                        
+                            <!-- Slider Track -->
+                            <div class="slider-track recom-row">
+                                <?php foreach ($topRecommendations as $row) { ?>
+                                    <div class="recom-book-item">
+                                        <div class="recom-book-info" style="font-size: medium;">
+                                            <a href="services-details.php?bookid=<?php echo $row->ID; ?>">
+                                                <?php echo '<img src="' . $row->ServiceImage . '" alt="Service Image" style="max-width: 200px; max-height: 200px; margin-bottom: 13px; ">'; ?>
+                                            </a>
+                                            <p class="book-title" style="font-weight: bold; font-size: larger; font-weight: bold;">
+                                                <a href="services-details.php?bookid=<?php echo $row->ID;?>" style="color:black; text-decoration: none;">
+                                                    <?php echo htmlentities($row->ServiceName);?>
+                                                </a>
+                                            </p>
+                                            <p class="book-author">By: <?php echo htmlentities($row->ServiceAuthor); ?></p>
+                                            <p class="book-availability">Availability: <?php echo htmlentities($row->SerAvailable); ?></p>
+                                            <p class="book-price" style="font-weight: bold;">Price: Rs.<?php echo htmlentities($row->ServicePrice); ?></p>
+                                            <!-- //disabled -->
+                                            <?php if ($row->SerAvailable == 0) { ?>
+                                                <button class="btn btn-default" disabled>Book Services</button>
+                                            <?php } else { ?>
+                                                <!-- dis -->
+                                                <?php if ($_SESSION['obbsuid'] == "") { ?>
+                                                    <a href="login.php" class="btn btn-default">Book Services</a>
+                                                <?php } else { ?>
+                                                    <a href="book-services.php?bookid=<?php echo $row->ID; ?>" class="btn btn-default">Book Services</a>
+                                                <?php } ?>
+                                                <!-- dis -->
+                                            <?php } ?>
+                                            <!-- dis -->
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
 
+                                <!-- Previous Button -->
+                            <button class="prev-btn" onclick="moveSlider('prev')">&#10094; </button>
 
-
-
-
-
-
-
-      <!-- Add this section where you want to display recommended books -->
-      <div>
-      <div class="about-top">
-		<div class="container">
-	
-
-			<div class="wthree-services-bottom-grids">
-				
-					<div class="bs-docs-example wow fadeInUp animated" data-wow-delay=".5s">
-
-    <h3>Recommended Books </h3>
-
-<table class="table table-bordered" id="bookList">
-    <thead>
-        <tr>
-            <th>S.N</th>
-            <th>Books Name</th>
-            <th>Description</th>
-            <th>Available</th>
-            <th>Price</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        $cnt = 1;
-         // Sort recommended books based on the order of booking
-             $sortedCategories = array_keys($recommendedBooks);
-             rsort($sortedCategories);
-
-        // Display recommended books
-        foreach ($sortedCategories as $category) {
-            foreach ($recommendedBooks[$category] as $book) {
-                ?>
-                <tr>
-                    <td><?php echo htmlentities($cnt); ?></td>
-                    <td><?php echo htmlentities($book->ServiceName); ?></td>
-                    <td><?php echo htmlentities($book->SerDes); ?></td>
-			        <td><?php  echo htmlentities($book->SerAvailable);?></td>
-                    <td><?php echo htmlentities($book->ServicePrice); ?></td>
-                    <td><a href="book-services.php?bookid=<?php echo $book->ID; ?>" class="btn btn-default">Book Services</a></td>
-                </tr>
-                <?php
-                $cnt++;
-            }
-        }
-        ?>
-    </tbody>
-</table>
+                            <!-- Next Button -->
+                            <button class="next-btn" onclick="moveSlider('next')"> &#10095;</button>
+                        </div>
+                    </div>
+                <?php } else { ?>
+                    <p>No results found.</p>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
 </div>
-</div>
-</div>
-</div>
-</div>
+
+
 
 
 
@@ -481,6 +649,27 @@ foreach ($previouslyBookedCategories as $category) {
 	</script>
 <!-- //here ends scrolling icon -->
 <script src="js/modernizr.custom.js"></script>
+
+
+<!-- For next and dprevious slider recommendation -->
+<!-- Add the following JavaScript after including jQuery  -->
+<script>
+    var currentPosition = 0;
+    const bookItemWidth = $('.recom-book-item').outerWidth(true);
+    const totalBooks = <?php echo count($topRecommendations); ?>;
+
+    function moveSlider(direction) {
+        const maxPosition = (totalBooks - 5) * bookItemWidth; // Display 5 books at a time
+
+        if (direction === 'next' && currentPosition > -maxPosition) {
+            currentPosition -= bookItemWidth;
+        } else if (direction === 'prev' && currentPosition < 0) {
+            currentPosition += bookItemWidth;
+        }
+
+        $('.slider-track').css('transform', 'translateX(' + currentPosition + 'px)');
+    }
+</script>
 
 </body>	
 </html> 

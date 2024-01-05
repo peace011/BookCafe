@@ -154,6 +154,18 @@ foreach($results as $row)
                                         <li>
                                             <a href="manage-event-type.php">Manage Table </a>
                                         </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a class="nav-submenu" data-toggle="nav-submenu" href="#"><i class="si si-energy"></i><span class="sidebar-mini-hide">Available Table List</span></a>
+                                    <ul>
+                                         <li>
+                                            <a href="add-available-event-type.php"> Add Available Table </a>
+                                        </li>
+                                        <li>
+                                            <a href="manage-available-event-type.php">Manage Available Table </a>
+                                        </li>
+
                                        
                                     </ul>
                                 </li>

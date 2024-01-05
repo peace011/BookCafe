@@ -91,7 +91,7 @@ if (strlen($_SESSION['odmsaid']) == 0) {
                                                 <a href="edit-category.php?editid=<?php echo ($row->ID); ?>"><button>Edit</button></a>
                                             </td>
                                             <td class="d-none d-sm-table-cell">
-                                                <a href="detail-category.php?categoryid=<?php echo ($row->ID); ?>" class="btn btn-primary">Details</a>
+                                                <a href="category-details.php?categoryid=<?php echo ($row->ID); ?>" class="btn btn-primary">Details</a>
                                             </td>
                                         </tr>
                                 <?php
